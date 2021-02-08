@@ -28,7 +28,7 @@ module.exports = (messageData, option) => {
   const r18Setus = fs.readdirSync(`${setuPath}r18`);
   if (messageData) {
     const { setu: { [messageData.group_id]: { flash: flash, r18: r17 } } } = tools.getProfile('pluginSettings');
-    r18 = r17
+    r18 = parseInt(r17);
     flash ?
       CQImage = `CQ:image,type=flash,file=` :
       CQImage = `CQ:image,file=`
