@@ -1,0 +1,26 @@
+gacha:
+  version:
+    - bl
+    - tw
+    - jp
+gvg:
+  version:
+    - none
+    - bl
+    - tw
+    - jp
+setu:
+  enable:
+    - false
+    - true
+  r18:
+    - 0
+    - 1
+    - 2
+  flash:
+    - true
+    - false
+title:
+  enable:
+    - false
+    - true

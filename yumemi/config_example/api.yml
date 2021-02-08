@@ -1,0 +1,16 @@
+webhook:
+  path: your github webhook path
+  secret: your github webhook secret
+setu:
+  version: choose you use the api (lolicon or acgmx)
+  lolicon:
+    apiurl: https://api.lolicon.app/setu/
+    apikey: your lolicon apikey
+  acgmx:
+    apiurl: https://api.acgmx.com/public/
+    apikey: your acgmx apikey
+jjc:
+  apiurl: 
+  apikey: your pcrdfans apikey
+hitokoto:
+  apiurl: https://v1.hitokoto.cn/?c=a&c=b&c=c
