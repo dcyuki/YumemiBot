@@ -16,6 +16,8 @@ gvg:
   icu: ^(挂树|sl)$
   info: ^出刀信息$
   rollback: ^撤销$
+  scoreLine: ^分数线$
+  rank: ^查询排名[\s][\S]+[\s]?[\S]*$
 __point:
   rank: ^(b|bl|国|台|日)服?rank$
   help: ^(帮助|文档|help)$

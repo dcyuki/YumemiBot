@@ -339,6 +339,37 @@ module.exports = (messageData, option) => {
     rout(damage);
   }
 
+  // 分数线
+  const scoreLine = async () => {
+    const rawData = JSON.parse(await tools.getRequest('https://tools-wiki.biligame.com/pcr/getTableInfo?type=subsection'));
+    let msg = '';
+    for (const item of rawData) {
+      msg += `排名：${item.rank}\n公会：${item.clan_name}\n分数：${item.damage}\n---------------\n`;
+    }
+
+    bot.sendGroupMsg(messageData.group_id, msg)
+  }
+  // 排名
+  const rank = async () => {
+    const [, name, leader] = messageData.raw_message.split(' ');
+    const rawData = JSON.parse(await tools.getRequest(`https://tools-wiki.biligame.com/pcr/getTableInfo?type=search&search=${name}&page=0`));
+
+    let msg = '';
+    if (leader) {
+      for (const item of rawData) {
+        if (item.leader_name === leader) {
+          msg += `排名：${item.rank}\n公会：${item.clan_name}\n会长：${item.leader_name}\n分数：${item.damage}`;
+          break;
+        }
+      }
+    } else {
+      for (const item of rawData) {
+        msg += `排名：${item.rank}\n公会：${item.clan_name}\n会长：${item.leader_name}\n分数：${item.damage}\n---------------\n你未指定会长，以上为所有同名公会数据，最多显示前 30 条数据`;
+      }
+    }
+    
+    bot.sendGroupMsg(messageData.group_id, msg);
+  }
   // 判断是否设置游戏服务器
   if (version === 'none' && option !== 'select') {
     bot.sendGroupMsg(messageData.group_id, '检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数...');
