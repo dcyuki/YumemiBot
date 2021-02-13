@@ -346,8 +346,10 @@ module.exports = (messageData, option) => {
     for (const item of rawData) {
       msg += `排名：${item.rank}\n公会：${item.clan_name}\n分数：${item.damage}\n---------------\n`;
     }
-
-    bot.sendGroupMsg(messageData.group_id, msg)
+    msg ?
+      bot.sendGroupMsg(messageData.group_id, msg) :
+      bot.sendGroupMsg(messageData.group_id, '会战已结束，无法获取数据')
+      ;
   }
   // 排名
   const rank = async () => {
@@ -367,8 +369,11 @@ module.exports = (messageData, option) => {
         msg += `排名：${item.rank}\n公会：${item.clan_name}\n会长：${item.leader_name}\n分数：${item.damage}\n---------------\n你未指定会长，以上为所有同名公会数据，最多显示前 30 条数据`;
       }
     }
-    
-    bot.sendGroupMsg(messageData.group_id, msg);
+
+    msg ?
+      bot.sendGroupMsg(messageData.group_id, msg) :
+      bot.sendGroupMsg(messageData.group_id, '会战已结束，无法获取数据')
+      ;
   }
   // 判断是否设置游戏服务器
   if (version === 'none' && option !== 'select') {

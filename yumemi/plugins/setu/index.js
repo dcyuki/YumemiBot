@@ -96,7 +96,7 @@ module.exports = (messageData, option) => {
     // 防止重复调用
     if (!reloading) {
       const setuMax = 50;
-      const setuNum = 20;
+      const setuNum = 10;
 
       if (r17Setus.length < setuMax || r18Setus.length < setuMax) {
         reloading = true;
