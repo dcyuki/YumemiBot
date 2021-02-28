@@ -116,6 +116,9 @@ module.exports = (messageData, option) => {
       }
     }
   }
-
+  const over = () => {
+    delete allboard[messageData.group_id];
+    bot.sendGroupMsg(messageData.group_id, `已中止当前对局`);
+  }
   eval(`${option}()`);
 }

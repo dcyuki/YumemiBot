@@ -3,7 +3,17 @@ const terminal = require('../__terminal/index');
 
 module.exports = (messageData, option) => {
   let sql;
-  const [year, month, day] = new Date().toLocaleDateString().split('/');
+  // const [year, month, day] = `${year}/${month}/${day}`.split('/');
+  const date = new Date();
+  const addZero = number => number < 10 ? '0' + number : number
+  const [year, month, day, hour, minute] = [
+    date.getFullYear(),
+    addZero(date.getMonth() + 1),
+    addZero(date.getDate()),
+    addZero(date.getHours()),
+    addZero(date.getMinutes())
+  ]
+  const nowTime = `${year}/${month}/${day} ${hour}:${minute}`;
   const { gvg: { [messageData.group_id]: { version: version } } } = tools.getProfile('pluginSettings');
   const { user_id: qq, group_id: group_id, group_name: name, sender: { nickname: nickname } } = messageData;
 
@@ -21,7 +31,7 @@ module.exports = (messageData, option) => {
         messageData.raw_message = '> update gvg version jp';
         break;
     }
-
+    // messageData.raw_message = guild === '国服' ? '国服' : (guild === '台服' ? '台服' : (guild === '日服' ? '日服' : void (0)))
     terminal(messageData, 'update');
   }
 
@@ -47,7 +57,7 @@ module.exports = (messageData, option) => {
 
       // 写入当期会战数据
       const constellation = messageData.raw_message.slice(2, 5);
-      sql = `INSERT INTO situation (group_id, constellation, time) VALUES ("${group_id}", "${constellation}", "${new Date().toLocaleString()}")`;
+      sql = `INSERT INTO situation (group_id, constellation, time) VALUES ("${group_id}", "${constellation}", "${nowTime}")`;
       if (await tools.sqlite(sql)) {
         bot.logger.info('INSERT situation success...');
         bot.sendGroupMsg(messageData.group_id, `${constellation} 会战开启成功...`);
@@ -97,14 +107,14 @@ module.exports = (messageData, option) => {
     let fight = await tools.sqlite(sql);
     fight = fight[0]
     // 当天是否出过刀
-    const time = fight.time.split(' ')[0];
+    const time = fight.time !== null ? fight.time.split(' ')[0] : null;
     let number, note;
     if (damage) {
-      fight.time !== null && new Date().toLocaleDateString() === time ?
+      fight.time !== null && `${year}/${month}/${day}` === time ?
         number = Math.floor(fight.number + 1) :
         number = 1;
     } else {
-      fight.time !== null && new Date().toLocaleDateString() === time ?
+      fight.time !== null && `${year}/${month}/${day}` === time ?
         number = fight.number + 0.5 :
         number = 0.5
     }
@@ -119,17 +129,17 @@ module.exports = (messageData, option) => {
         if (damage > fight.blood) {
           bot.sendGroupMsg(messageData.group_id, `伤害值超出 boss 剩余血量，若以斩杀 boss 请使用「尾刀」指令`);
         } else {
-          sql = `INSERT INTO fight (group_id, qq, nickname, number, week, boss, damage, note, time) VALUES ("${group_id}", "${qq}", "${nickname}", "${number}", "${week}", "${boss}", "${damage}", "${note}", "${new Date().toLocaleString()}")`;
+          sql = `INSERT INTO fight (group_id, qq, nickname, number, week, boss, damage, note, time) VALUES ("${group_id}", "${qq}", "${nickname}", "${number}", "${week}", "${boss}", "${damage}", "${note}", "${nowTime}")`;
           if (await tools.sqlite(sql)) bot.sendGroupMsg(group_id, note);
 
-          sql = `UPDATE situation SET blood = blood - ${damage}, time = "${new Date().toLocaleString()}" WHERE group_id = "${group_id}" AND time LIKE "%${year}/${month}%"`;
+          sql = `UPDATE situation SET blood = blood - ${damage}, time = "${nowTime}" WHERE group_id = "${group_id}" AND time LIKE "%${year}/${month}%"`;
           if (await tools.sqlite(sql)) state();
         }
       } else {
         // 查询斩杀 boss 的血量
         damage = fight.blood
         note = `${nickname} 对 ${boss} 王造成了 ${damage} 点伤害并击破`;
-        sql = `INSERT INTO fight (group_id, qq, nickname, number, week, boss, damage, note, time) VALUES ("${group_id}", "${qq}", "${nickname}", "${number}", "${week}", "${boss}", "${damage}", "${note}", "${new Date().toLocaleString()}")`;
+        sql = `INSERT INTO fight (group_id, qq, nickname, number, week, boss, damage, note, time) VALUES ("${group_id}", "${qq}", "${nickname}", "${number}", "${week}", "${boss}", "${damage}", "${note}", "${nowTime}")`;
         if (await tools.sqlite(sql)) bot.sendGroupMsg(group_id, note);
         // 获取下一个 boss 的血量
         boss != 5 ?
@@ -141,7 +151,7 @@ module.exports = (messageData, option) => {
           ;
         const blood = getBlood(week, boss);
         // let blood = boss[setting.version][stage - 1][data.boss - 1];
-        sql = `UPDATE situation SET week = ${week}, boss = ${boss}, blood = ${blood}, time = "${new Date().toLocaleString()}" WHERE group_id = "${group_id}" AND time LIKE "%${year}/${month}%"`;
+        sql = `UPDATE situation SET week = ${week}, boss = ${boss}, blood = ${blood}, time = "${nowTime}" WHERE group_id = "${group_id}" AND time LIKE "%${year}/${month}%"`;
         if (await tools.sqlite(sql)) {
           state();
           // At 预约 boss
