@@ -1,6 +1,6 @@
 {
   "name": "YumemiBot",
-  "version": "1.0.0",
+  "version": "0.5.1",
   "description": "まるで、夢みたい…",
   "main": "app.js",
   "scripts": {
@@ -16,14 +16,15 @@
   "license": "ISC",
   "dependencies": {
     "art-template": "^4.13.2",
+    "bili-api": "^1.6.0",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "express-art-template": "^1.0.1",
     "express-session": "^1.17.1",
     "js-yaml": "^4.0.0",
     "node-schedule": "^2.0.0",
-    "oicq": "^1.13.1",
+    "oicq": "^1.13.3",
     "sharp": "^0.27.1",
-    "sqlite3": "^5.0.0"
+    "sqlite3": "5.0.0"
   }
 }

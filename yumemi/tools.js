@@ -152,7 +152,7 @@ const setProfile = (fileName, newData, filePath = `${__dirname}/config`) => {
   const url = `${filePath}/${fileName}.yml`;
   try {
     fs.writeFileSync(url, yaml.dump(newData));
-    bot.logger.debug(`已更新 ${fileName}.yml 配置文件 ♪`);
+    bot.logger.info(`已更新 ${fileName}.yml 配置文件 ♪`);
     return true;
   } catch (error) {
     bot.logger.error(error.message);
@@ -173,14 +173,14 @@ const checkProfile = (fileName, filePath = `${__dirname}/config/`) => {
   fs.stat(url, error => {
     // 不存在则创建
     if (error) {
-      bot.logger.debug(`检测到配置文件不存在，正在初始化 ${fileName}.yml 文件...`);
-      updatePluginSettings(publicPlugins);
+      bot.logger.info(`检测到配置文件不存在，正在初始化 ${fileName}.yml 文件...`);
+      updatePluginSettings(publicPlugins, true);
     } else {
-      bot.logger.debug(`检测到 ${fileName}.yml 文件已存在，正在校验文件完整性...`);
+      bot.logger.info(`检测到 ${fileName}.yml 文件已存在，正在校验文件完整性...`);
       const pluginSettings = getProfile('pluginSettings');
       // 若添加新插件则重新写入
       if (Object.keys(pluginSettings).length < publicPlugins.length) {
-        bot.logger.debug(`你可能添加了新的插件，已重新生成 ${fileName}.yml 配置文件 ♪`);
+        bot.logger.info(`你可能添加了新的插件，正在更新 ${fileName}.yml 配置文件 ♪`);
         // 有一个小 bug ，如果添加新的插件则所有配置全部初始化
         updatePluginSettings(publicPlugins)
       } else if (Object.keys(pluginSettings).length === publicPlugins.length) {
@@ -193,15 +193,19 @@ const checkProfile = (fileName, filePath = `${__dirname}/config/`) => {
 }
 
 // 生成 pluginSettings.yml
-const updatePluginSettings = publicPlugins => {
-  const pluginSettings = {};
+const updatePluginSettings = (publicPlugins, create = false) => {
+  const pluginSettings = create ? {} : getProfile('pluginSettings');
   const { groups } = getProfile('botSettings');
   const pluginParams = getProfile('pluginParams');
+
   // 遍历插件
   for (const plugin of publicPlugins) {
-    pluginSettings[plugin] = {};
+    // 插件不存在则创建对象
+    if (!pluginSettings[plugin]) pluginSettings[plugin] = {};
     // 遍历群号
     for (const group_id in groups) {
+      // 群聊信息存在则跳过循环
+      if (pluginSettings[plugin][group_id]) continue;
       const groupSettings = {};
       // 判断插件是否存在多参
       if (pluginParams[plugin]) {
@@ -211,6 +215,7 @@ const updatePluginSettings = publicPlugins => {
           groupSettings[param] = pluginParams[plugin][param][0];
         }
       }
+
       // 未指定 enable 默认 true
       if (groupSettings.enable === undefined) groupSettings.enable = true;
       pluginSettings[plugin][group_id] = groupSettings;
@@ -224,7 +229,7 @@ const checkGroup = messageData => {
   const { groups } = getProfile('botSettings');
   // 判断该群是否监听
   if (groups === null || groups[messageData.group_id] === undefined) {
-    // 录入该群信息，默认 false
+    // 若不存在则录入该群信息，默认 false
     const botSettings = getProfile('botSettings');
     if (groups === null) botSettings.groups = {};
     bot.logger.info(`检测到群聊 「${messageData.group_name} (${messageData.group_id})」 未初始化信息，正在写入数据...`)
@@ -241,10 +246,8 @@ const checkGroup = messageData => {
       }
       updatePluginSettings(publicPlugins);
     }
-  } else if (groups[messageData.group_id]) {
-    if (groups[messageData.group_id].enable) {
-      return true;
-    }
+  } else if (groups[messageData.group_id].enable) {
+    return true;
   }
 }
 module.exports = {

@@ -1,3 +1,16 @@
+bilibili:
+  enable:
+    - false
+    - true
+  bl:
+    - true
+    - false
+  tw:
+    - false
+    - true
+  jp:
+    - true
+    - false
 gacha:
   version:
     - bl

@@ -41,9 +41,9 @@ const linkStart = async () => {
 
 linkStart().then(() => {
   const { version, released, changelogs } = info;
-  bot.logger.info(`----------`);
-  bot.logger.info(`Package Version: ${ version } (Released on ${ released })`);
-  bot.logger.info(`View Changelogs：${ changelogs }`);
-  bot.logger.info(`----------`);
+  bot.logger.mark(`----------`);
+  bot.logger.mark(`Package Version: ${ version } (Released on ${ released })`);
+  bot.logger.mark(`View Changelogs：${ changelogs }`);
+  bot.logger.mark(`----------`);
   require(`${__yumemi}/serve`);
 });

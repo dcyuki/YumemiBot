@@ -135,7 +135,7 @@ app.post('/password', async (req, res) => {
 	const user = await tools.sqlite(sql);
 	let status = '0';
 	if (user.length >= 1) {
-		sql = 'UPDATE user SET password = "' + pwdInfo.newPassword + '"';
+		sql = `UPDATE user SET password = "${pwdInfo.newPassword}" WHERE qq = "${req.session.userInfo.qq}"`;
 		if (await tools.sqlite(sql)) {
 			status = '1'
 		} else {
@@ -159,7 +159,7 @@ app.post(webhook.path, (req, res) => {
 			const pushInfo = `Received a push event for ${payload.repository.name} to ${payload.ref}
 Summary: ${commit[0]}
 Description: 
-	${commit[1].replace(/\n/, '\n\t')}
+	${commit[1].replace(/\n/g, '\n\t')}
 Author: ${payload.head_commit.committer.name}
 Updated: ${payload.head_commit.timestamp}
 Link: ${payload.head_commit.url}`;
@@ -179,5 +179,5 @@ Link: ${payload.head_commit.url}`;
 });
 
 app.listen(port, () => {
-	bot.logger.info('Web serve is running...');
+	bot.logger.mark('Web serve is running...');
 });

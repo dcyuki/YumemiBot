@@ -42,7 +42,7 @@ bot.on("message.group", data => {
 bot.on("request.group.invite", (data) => {
   console.log(data)
   bot.setGroupAddRequest(data.flag);
-  bot.sendPrivateMsg(tools.getProfile('botSettings').master, data)
+  bot.sendPrivateMsg(tools.getProfile('botSettings').master, JSON.stringify(data))
 });
 
 //自动同意好友申请

@@ -9,10 +9,7 @@ tools.scheduleJob('0 0 0/6 * * ?', () => {
 	const { buy } = tools.getProfile('pluginSettings');
 	// 判断开启服务的群
 	for (const group_id in groups) {
-		if (groups[group_id].enable) {
-			if (buy[group_id].enable) {
-				bot.sendGroupMsg(group_id, `[CQ:image,file=${buyPath}${img}]`);
-			}
-		}
+		if (!groups[group_id].enable) continue;
+		if (buy[group_id].enable) bot.sendGroupMsg(group_id, `[CQ:image,file=${buyPath}${img}]`);
 	}
 });
