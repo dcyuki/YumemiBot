@@ -11,6 +11,8 @@ groups:
   # 无需手动配置
   # 群内有人发送消息后会自动在此处添加群聊相关信息
 
+# 除非你知道自己在做什么，以下一般无需修改
+
 # bot 信息
 info:
   released: 2021/3/3
@@ -20,7 +22,6 @@ info:
   changelogs: https://docs.littlemaple.club/#/changelog/
 
 # bot 配置
-# 除非你知道自己在做什么，以下一般无需修改
 config:
   # https://github.com/takayama-lily/oicq/blob/master/client.d.ts#ConfBot
   log_level: debug

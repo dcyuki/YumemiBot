@@ -2,10 +2,10 @@
 const terminal = require('../__terminal/index');
 
 module.exports = (messageData, option) => {
-  let sql;
+  let sql = null;
   // const [year, month, day] = `${year}/${month}/${day}`.split('/');
   const date = new Date();
-  const addZero = number => number < 10 ? '0' + number : number
+  const addZero = number => number < 10 ? '0' + number : number;
   const [year, month, day, hour, minute] = [
     date.getFullYear(),
     addZero(date.getMonth() + 1),
@@ -15,7 +15,7 @@ module.exports = (messageData, option) => {
   ]
   const nowTime = `${year}/${month}/${day} ${hour}:${minute}`;
   const { gvg: { [messageData.group_id]: { version: version } } } = tools.getProfile('pluginSettings');
-  const { user_id: qq, group_id: group_id, group_name: name, sender: { nickname: nickname } } = messageData;
+  const { user_id: qq, group_id: group_id, group_name: name, sender: { nickname: nickname, card: card } } = messageData;
 
   const select = () => {
     // 拆分字段
@@ -37,7 +37,7 @@ module.exports = (messageData, option) => {
 
   // 开启会战请求
   const start = async () => {
-    // 查询当月是否已开启会战
+    // 查询 **当月** 是否已开启会战
     sql = `SELECT group_id FROM situation WHERE group_id = "${group_id}" AND time LIKE "%${year}/${month}%"`;
     let situation = await tools.sqlite(sql);
     situation = situation[0]
@@ -59,8 +59,25 @@ module.exports = (messageData, option) => {
       const constellation = messageData.raw_message.slice(2, 5);
       sql = `INSERT INTO situation (group_id, constellation, time) VALUES ("${group_id}", "${constellation}", "${nowTime}")`;
       if (await tools.sqlite(sql)) {
-        bot.logger.info('INSERT situation success...');
+        bot.logger.mark('INSERT situation success...');
         bot.sendGroupMsg(messageData.group_id, `${constellation} 会战开启成功...`);
+        // 不存在则创建 reservation.yml 文件（这段代码重复了，待简化）~~又不是不能用，最喜欢堆屎山了~~
+        let reservation = tools.getProfile('reservation', __dirname);
+        if (reservation === undefined || reservation[group_id] === undefined) {
+          reservation === undefined ?
+            createReservation(undefined) :
+            createReservation(null)
+            ;
+          reservation = tools.getProfile('reservation', __dirname);
+        }
+        // 存在则清空上期会战的预约残留数据
+        for (const item in reservation[group_id]) {
+          if (reservation[group_id][item].length > 0) reservation[group_id][item].length = 0;
+        }
+        tools.setProfile('reservation', reservation, __dirname) ?
+          bot.logger.info('已清空上期预约数据') :
+          bot.logger.error('初始化数据发生未知错误...')
+          ;
       }
     }
   }
@@ -69,18 +86,10 @@ module.exports = (messageData, option) => {
     let stage;
     let bossInfo = tools.getProfile('boss');
 
-    if (week <= 3) {
-      stage = 1;
-    } else if (week <= 10) {
-      stage = 2;
-    } else if (week <= 35) {
-      stage = 3;
-    } else {
-      version != 'bl' ?
-        stage = 4 :
-        stage = 3
-        ;
-    }
+    if (week <= 3) stage = 1;
+    else if (week <= 10) stage = 2;
+    else if (week <= 35) stage = 3;
+    else version != 'bl' ? stage = 4 : stage = 3;
 
     return bossInfo[version][stage - 1][boss - 1];
   }
@@ -93,7 +102,21 @@ module.exports = (messageData, option) => {
 
     if (situation) {
       const maxBlood = getBlood(situation.week, situation.boss);
-      const situationMsg = `当前信息:\n\t${situation.week} 周目  ${situation.boss} 王  ${situation.blood} \\ ${maxBlood}\n更新时间:\n\t${situation.time}`;
+      // 获取预约成员
+      let reservation = tools.getProfile('reservation', __dirname);
+      // 不存在则创建 reservation.yml 文件（这段代码重复了，待简化）~~又不是不能用，最喜欢堆屎山了~~
+      if (reservation === undefined || reservation[group_id] === undefined) {
+        reservation === undefined ?
+          createReservation(undefined) :
+          createReservation(null)
+          ;
+        reservation = tools.getProfile('reservation', __dirname);
+      }
+      const member = []
+      for (let i = 0; i < reservation[group_id][situation.boss].length; i++) {
+        member.push(`${reservation[group_id][situation.boss][i].split(' ')[1]}, `)
+      }
+      const situationMsg = `当前信息:\n\t${situation.week} 周目  ${situation.boss} 王  ${situation.blood} \\ ${maxBlood}\n讨伐成员: \n\t${member}\n更新时间:\n\t${situation.time}`;
       bot.sendGroupMsg(group_id, situationMsg);
     } else {
       bot.sendGroupMsg(group_id, '当期未开启会战...');
@@ -103,12 +126,12 @@ module.exports = (messageData, option) => {
   // 录入伤害
   const insertFight = async damage => {
     // 获取当天出刀信息
-    sql = `SELECT user.nickname, situation.week, situation.boss, situation.blood, fight.number, fight.time AS time FROM user LEFT JOIN (situation LEFT JOIN fight ON fight.group_id = situation.group_id AND fight.group_id = "${group_id}" AND fight.qq = "${qq}") WHERE user.qq = "${qq}" ORDER BY fight.time DESC`;
+    sql = `SELECT user.nickname, situation.week, situation.boss, situation.blood, fight.number, fight.time AS time FROM user LEFT JOIN (situation LEFT JOIN fight ON fight.group_id = situation.group_id AND fight.group_id = "${group_id}" AND fight.qq = "${qq}") WHERE user.qq = "${qq}" ORDER BY fight.time DESC, fight.number DESC`;
     let fight = await tools.sqlite(sql);
     fight = fight[0]
     // 当天是否出过刀
     const time = fight.time !== null ? fight.time.split(' ')[0] : null;
-    let number, note;
+    let number, note = null;
     if (damage) {
       fight.time !== null && `${year}/${month}/${day}` === time ?
         number = Math.floor(fight.number + 1) :
@@ -125,7 +148,7 @@ module.exports = (messageData, option) => {
       let { week, boss } = fight;
       // 是否斩杀 boss
       if (damage) {
-        note = `${nickname} 对 ${boss} 王造成了 ${damage} 点伤害`;
+        note = `${card} 对 ${boss} 王造成了 ${damage} 点伤害`;
         if (damage > fight.blood) {
           bot.sendGroupMsg(messageData.group_id, `伤害值超出 boss 剩余血量，若以斩杀 boss 请使用「尾刀」指令`);
         } else {
@@ -138,7 +161,7 @@ module.exports = (messageData, option) => {
       } else {
         // 查询斩杀 boss 的血量
         damage = fight.blood
-        note = `${nickname} 对 ${boss} 王造成了 ${damage} 点伤害并击破`;
+        note = `${card} 对 ${boss} 王造成了 ${damage} 点伤害并击破`;
         sql = `INSERT INTO fight (group_id, qq, nickname, number, week, boss, damage, note, time) VALUES ("${group_id}", "${qq}", "${nickname}", "${number}", "${week}", "${boss}", "${damage}", "${note}", "${nowTime}")`;
         if (await tools.sqlite(sql)) bot.sendGroupMsg(group_id, note);
         // 获取下一个 boss 的血量
@@ -170,7 +193,10 @@ module.exports = (messageData, option) => {
             }
             if (at !== '') {
               bot.sendGroupMsg(group_id, `${at} 到 ${boss}王 啦~'`);
-              reservation[group_id][boss] = ['暂无人预约'];
+            }
+            // boss 被斩杀后清空预约数据
+            if (reservation[group_id][boss === 1 ? 5 : boss - 1].length > 0) {
+              reservation[group_id][boss === 1 ? 5 : boss - 1].length = 0;
               tools.setProfile('reservation', reservation, __dirname) ?
                 bot.logger.info('已清空预约数据') :
                 bot.logger.error('发生未知错误...')
@@ -199,7 +225,6 @@ module.exports = (messageData, option) => {
     reservation[group_id] = {};
     for (let i = 1; i <= 5; i++) {
       reservation[group_id][i] = [];
-      reservation[group_id][i][0] = '暂无人预约';
     }
 
     tools.setProfile('reservation', reservation, __dirname) ?
@@ -208,8 +233,11 @@ module.exports = (messageData, option) => {
       ;
   }
 
+  // 预约 boss
   const reservation = () => {
     let reservation = tools.getProfile('reservation', __dirname);
+
+    // 不存在则创建 reservation.yml 文件
     if (reservation === undefined || reservation[group_id] === undefined) {
       reservation === undefined ?
         createReservation(undefined) :
@@ -218,10 +246,11 @@ module.exports = (messageData, option) => {
       reservation = tools.getProfile('reservation', __dirname);
     }
     const boss = messageData.raw_message.slice(2).trim();
+    // boss 传入实参则插入预约信息
     if (boss) {
       let exist = false;
-      for (let user_id of reservation[group_id][boss]) {
-        if (qq === user_id) {
+      for (let i = 0; i < reservation[group_id][boss].length; i++) {
+        if (qq == reservation[group_id][boss][i].split(' ')[0]) {
           exist = true
           break;
         }
@@ -230,23 +259,27 @@ module.exports = (messageData, option) => {
       exist ?
         bot.sendGroupMsg(group_id, `[CQ:at,qq=${qq}] 你已预约 ${boss}王 ，请勿重复预约`) :
         (
-          reservation[group_id][boss].push(qq),
-          reservation[group_id][boss][0] = `当前已有 ${reservation[group_id][boss].length - 1}人 预约`,
+          reservation[group_id][boss].push(`${qq} ${card}`),
           tools.setProfile('reservation', reservation, __dirname) ?
             bot.sendGroupMsg(group_id, `[CQ:at,qq=${qq}] 预约 ${boss}王 成功`) :
             bot.sendGroupMsg(group_id, `[CQ:at,qq=${qq}] 发生未知错误，预约 ${boss}王 失败`)
         )
+      // 不传入 boss 实参则发送预约信息
     } else {
-      if (!reservation[group_id]) {
-        bot.sendGroupMsg(group_id, '当前暂无预约记录...');
-      } else {
-        let msg = '';
-        for (let i = 1; i <= 5; i++) {
-          msg += i + '王：' + JSON.stringify(reservation[group_id][i]) + '\n';
+      let msg = '当前预约信息:';
+      let member = '';
+      for (let i = 1; i <= 5; i++) {
+        for (let j = 0; j < reservation[group_id][i].length; j++) {
+          if (reservation[group_id][i][j] !== undefined) {
+            member += ` ${reservation[group_id][i][j].split(' ')[1]},`
+          }
+          console.log(i, j)
         }
-
-        bot.sendGroupMsg(group_id, msg);
+        msg += `\n\t${i}王: ${member}`;
+        member = '';
       }
+
+      bot.sendGroupMsg(group_id, msg);
     }
   }
 
@@ -257,7 +290,7 @@ module.exports = (messageData, option) => {
     const length = 6;
     let password = [];
     for (let i = 0; i < length; i++) {
-      // 大写字母 'A' 的 ASCII 是 65 , A~Z 的 ASCII 码就是 65 + 0~25;
+      // 大写字母 'A' 的 ASCII 是 65 , A~Z 的 ASCII 码就是 65 + 0 ~ 25;
       password.push(String.fromCharCode(65 + Math.floor(Math.random() * 26)));
     }
 
@@ -334,6 +367,10 @@ module.exports = (messageData, option) => {
       if (member[0].state !== 1) {
         bot.sendGroupMsg(group_id, '你的账号在当前公会已被禁用，如有疑问请联系会长');
       } else {
+        if (damage === 0) {
+          bot.sendGroupMsg(messageData.group_id, `伤害0？这么说，你很勇咯？\n[CQ:image,file=${__yumemi}/data/images/emoji/fight.jpg]`);
+          return;
+        }
         damage ?
           insertFight(damage) :
           insertFight()
@@ -358,7 +395,7 @@ module.exports = (messageData, option) => {
     }
     msg ?
       bot.sendGroupMsg(messageData.group_id, msg) :
-      bot.sendGroupMsg(messageData.group_id, '会战已结束，无法获取数据')
+      bot.sendGroupMsg(messageData.group_id, '会战未开启，无法获取数据')
       ;
   }
   // 排名

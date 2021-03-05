@@ -18,6 +18,7 @@ bot.on("message.private", data => {
 
 //监听群聊
 bot.on("message.group", data => {
+  console.log(data)
   if (tools.checkGroup(data)) {
     const option = tools.getOption(data.raw_message);
     const pluginSettings = tools.getProfile('pluginSettings');

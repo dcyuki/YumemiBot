@@ -18,7 +18,7 @@ gvg:
   reservation: ^预约[\s]?[1-6]?$
   state: ^状态$
   icu: ^(挂树|sl)$
-  info: ^出刀信息$
+  info: ^查刀$
   rollback: ^撤销$
   scoreLine: ^分数线$
   rank: ^查询排名[\s][\S]+[\s]?[\S]*$
