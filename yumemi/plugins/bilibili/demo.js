@@ -3,7 +3,7 @@ const pcr_bl = 353840826;
 const Msg = new Map();
 Msg.set('blNews', null);
 
-tools.scheduleJob('0 0/10 * * * ?', async () => {
+tools.scheduleJob('0 0/1 * * * ?', async () => {
   const { groups } = tools.getProfile('botSettings');
   const { bilibili: setting } = tools.getProfile('pluginSettings');
   const { dynamics } = await biliAPI({ mid: pcr_bl }, ['dynamics']);
@@ -16,7 +16,7 @@ tools.scheduleJob('0 0/10 * * * ?', async () => {
 
   Msg.set('blNews', dynamic_id);
   
-  if (!pictures) {
+  if (pictures) {
     for (const { img_src } of pictures) description += `\n[CQ:image,file=${img_src}]`;
   }
 
