@@ -19,8 +19,11 @@ gvg:
   state: ^状态$
   icu: ^(挂树|sl)$
   info: ^查刀$
+  updateFight: ^修改[\s][0-3][.5]?[\s][0-9]+$
+  updateBlood: ^血量[\s]?[1-9]\d+$
+  acting: ^\s*\[CQ:at,qq=\d+,text=@\w+\]\s*\u4EE3\u62A5\s*\d*
   rollback: ^撤销$
-  scoreLine: ^分数线$
+  score: ^分数线$
   rank: ^查询排名[\s][\S]+[\s]?[\S]*$
 __point:
   rank: ^(b|bl|国|台|日)服?rank$

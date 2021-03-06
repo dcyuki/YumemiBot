@@ -15,9 +15,13 @@ tools.scheduleJob('0 0/10 * * * ?', async () => {
   }
 
   Msg.set('blNews', dynamic_id);
-  for (const { img_src } of pictures) description += `\n[CQ:image,file=${img_src}]`;
+  
+  if (!pictures) {
+    for (const { img_src } of pictures) description += `\n[CQ:image,file=${img_src}]`;
+  }
+
   for (const group_id in groups) {
-		if (!groups[group_id].enable) continue;
+    if (!groups[group_id].enable) continue;
     if (setting[group_id].enable) bot.sendGroupMsg(group_id, `B服动态更新:\n${description}`);
-	}
+  }
 });

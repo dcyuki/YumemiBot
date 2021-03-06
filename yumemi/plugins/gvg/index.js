@@ -15,8 +15,8 @@ module.exports = (messageData, option) => {
   ]
   const nowTime = `${year}/${month}/${day} ${hour}:${minute}`;
   const { gvg: { [messageData.group_id]: { version: version } } } = tools.getProfile('pluginSettings');
-  const { user_id: qq, group_id: group_id, group_name: name, sender: { nickname: nickname, card: card } } = messageData;
-
+  let { user_id: qq, group_id: group_id, group_name: name, sender: { nickname: nickname, card: card } } = messageData;
+  if (!card) card = nickname;
   const select = () => {
     // 拆分字段
     const guild = messageData.raw_message.slice(2, 4);
@@ -150,7 +150,7 @@ module.exports = (messageData, option) => {
       if (damage) {
         note = `${card} 对 ${boss} 王造成了 ${damage} 点伤害`;
         if (damage > fight.blood) {
-          bot.sendGroupMsg(messageData.group_id, `伤害值超出 boss 剩余血量，若以斩杀 boss 请使用「尾刀」指令`);
+          bot.sendGroupMsg(group_id, `伤害值超出 boss 剩余血量，若以斩杀 boss 请使用「尾刀」指令`);
         } else {
           sql = `INSERT INTO fight (group_id, qq, nickname, number, week, boss, damage, note, time) VALUES ("${group_id}", "${qq}", "${nickname}", "${number}", "${week}", "${boss}", "${damage}", "${note}", "${nowTime}")`;
           if (await tools.sqlite(sql)) bot.sendGroupMsg(group_id, note);
@@ -313,10 +313,10 @@ module.exports = (messageData, option) => {
     } else {
       sql = `INSERT INTO member (qq, group_id) VALUES ("${qq}", "${group_id}")`;
       if (await tools.sqlite(sql)) {
-        bot.sendGroupMsg(messageData.group_id, `[CQ:at,qq=${qq}] 你成功加入公会`);
+        bot.sendGroupMsg(group_id, `[CQ:at,qq=${qq}] 你成功加入公会`);
         return true;
       } else {
-        bot.sendGroupMsg(messageData.group_id, `[CQ:at,qq=${qq}] 加入公会失败`);
+        bot.sendGroupMsg(group_id, `[CQ:at,qq=${qq}] 加入公会失败`);
         return false;
       }
     }
@@ -333,9 +333,9 @@ module.exports = (messageData, option) => {
         fightMsg += '第 ' + fight[i].number + ' 刀: [" Boss: ' + fight[i].boss + ' 王, 伤害: ' + fight[i].damage + ' "]\n';
       }
 
-      bot.sendGroupMsg(messageData.group_id, fightMsg);
+      bot.sendGroupMsg(group_id, fightMsg);
     } else {
-      bot.sendGroupMsg(messageData.group_id, '你今天还没有出刀呢，暂无数据...');
+      bot.sendGroupMsg(group_id, '你今天还没有出刀呢，暂无数据...');
     }
   }
 
@@ -368,7 +368,7 @@ module.exports = (messageData, option) => {
         bot.sendGroupMsg(group_id, '你的账号在当前公会已被禁用，如有疑问请联系会长');
       } else {
         if (damage === 0) {
-          bot.sendGroupMsg(messageData.group_id, `伤害0？这么说，你很勇咯？\n[CQ:image,file=${__yumemi}/data/images/emoji/fight.jpg]`);
+          bot.sendGroupMsg(group_id, `伤害0？这么说，你很勇咯？\n[CQ:image,file=${__yumemi}/data/images/emoji/fight.jpg]`);
           return;
         }
         damage ?
@@ -377,25 +377,66 @@ module.exports = (messageData, option) => {
           ;
       }
     } else {
-      bot.sendGroupMsg(messageData.group_id, '你当月未发起会战');
+      bot.sendGroupMsg(group_id, '你当月未发起会战');
     }
   }
+
   // 报刀
   const harm = () => {
     const damage = parseInt(messageData.raw_message.slice(2).trim());
     rout(damage);
   }
 
+  // 代报
+  const acting = () => {
+    const info = messageData.raw_message.match(/(?<=\[CQ:at,qq=|\u4EE3\u62A5\s*)\d+/g);
+    bot.getGroupMemberInfo(group_id, info[0]).then(data => {
+      const { data: rawData } = data;
+      console.log(rawData)
+      qq = rawData.user_id;
+      nickname = rawData.nickname;
+      if (!rawData.card) card = rawData.nickname;
+      rout(!info[1] ? null : info[1]);
+    });
+  }
+
+  // 修改出刀信息
+  const updateFight = async () => {
+    const [, number, damage] = messageData.raw_message.split(' ');
+
+    sql = `UPDATE fight SET damage = ${damage} WHERE qq = "${qq}" AND number = ${number} AND time LIKE "%${year}/${month}/${day}%"`;
+    console.log(sql);
+    if (await tools.sqlite(sql)) {
+      bot.logger.info('UPDATE fight success...');
+      bot.sendGroupMsg(group_id, '修改成功...');
+      info();
+    } else {
+      bot.sendGroupMsg(group_id, 'Error');
+    }
+  }
+
+  // 修改 boss 血量
+  const updateBlood = async () => {
+    const blood = messageData.raw_message.slice(2).trim();
+    sql = `UPDATE situation SET blood = ${blood} WHERE group_id = "${group_id}" AND time LIKE "%${year}/${month}/${day}%"`;
+    if (await tools.sqlite(sql)) {
+      bot.sendGroupMsg(messageData.group_id, '修改成功...');
+      state();
+    } else {
+      bot.sendGroupMsg(group_id, 'Error');
+    }
+  }
+
   // 分数线
-  const scoreLine = async () => {
+  const score = async () => {
     const rawData = JSON.parse(await tools.getRequest('https://tools-wiki.biligame.com/pcr/getTableInfo?type=subsection'));
     let msg = '';
     for (const item of rawData) {
       msg += `排名：${item.rank}\n公会：${item.clan_name}\n分数：${item.damage}\n---------------\n`;
     }
     msg ?
-      bot.sendGroupMsg(messageData.group_id, msg) :
-      bot.sendGroupMsg(messageData.group_id, '会战未开启，无法获取数据')
+      bot.sendGroupMsg(group_id, msg) :
+      bot.sendGroupMsg(group_id, '会战未开启，无法获取数据')
       ;
   }
   // 排名
@@ -418,13 +459,13 @@ module.exports = (messageData, option) => {
     }
 
     msg ?
-      bot.sendGroupMsg(messageData.group_id, msg) :
-      bot.sendGroupMsg(messageData.group_id, '会战已结束，无法获取数据')
+      bot.sendGroupMsg(group_id, msg) :
+      bot.sendGroupMsg(group_id, '会战已结束，无法获取数据')
       ;
   }
   // 判断是否设置游戏服务器
   if (version === 'none' && option !== 'select') {
-    bot.sendGroupMsg(messageData.group_id, '检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数...');
+    bot.sendGroupMsg(group_id, '检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数...');
   } else {
     eval(`${option}()`);
   }
