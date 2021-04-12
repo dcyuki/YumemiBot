@@ -1,30 +1,22 @@
 {
-  "name": "YumemiBot",
-  "version": "0.5.1",
+  "name": "yumemi_bot",
+  "version": "0.6.0",
   "description": "まるで、夢みたい…",
-  "main": "app.js",
+  "main": "app.ts",
   "scripts": {
-    "start": "node app.js",
+    "start": "npx ts-node app.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/dcyuki/YumemiBot"
+    "url": "https://github.com/dcyuki/yumemi_bot"
   },
   "keywords": [],
-  "author": "",
+  "author": "dc_yuki",
   "license": "ISC",
   "dependencies": {
-    "art-template": "^4.13.2",
-    "bili-api": "^1.6.0",
-    "body-parser": "^1.19.0",
-    "express": "^4.17.1",
-    "express-art-template": "^1.0.1",
-    "express-session": "^1.17.1",
-    "js-yaml": "^4.0.0",
-    "node-schedule": "^2.0.0",
-    "oicq": "^1.13.3",
-    "sharp": "^0.27.1",
-    "sqlite3": "5.0.0"
+    "oicq": "^1.15.1",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.4"
   }
 }
