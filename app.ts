@@ -1,6 +1,43 @@
-// global.__yumemi = `${__dirname}/yumemi`;
-// global.tools = require(`${__yumemi}/tools`);
 import { createClient } from "oicq";
+
+class Yumemi {
+    public admin:number;
+    public master:number;
+    public uin: number;
+    private pwd: string;
+
+    constructor(admin:number, master:number, uin: number, pwd: string) {
+        this.admin = admin;
+        this.master = master;
+        this.uin = uin;
+        this.pwd = pwd;
+    }
+
+    public login():any{
+        const bot = createClient(this.uin, {
+              log_level: "debug", //日志级别设置为debug
+              platform: 4, //登录设备选择为ipad
+        });
+
+        //监听并输入滑动验证码ticket(同一地点只需验证一次)
+        bot.on("system.login.slider", () => {
+            process.stdin.once("data", (input:any) => {
+              bot.sliderLogin(input);
+           });
+        });
+   
+        //监听设备锁验证(同一设备只需验证一次)
+        bot.on("system.login.device", () => {
+            bot.logger.info("验证完成后敲击Enter继续..");
+            process.stdin.once("data", () => {
+            bot.login();
+            });
+       });
+        
+        bot.login(this.pwd)
+        return bot;
+    }
+}
 
 const logo = `--------------------------------------------------------------------------------------------
                                                                              _         
@@ -10,42 +47,29 @@ const logo = `------------------------------------------------------------------
 --------------------------------------------------------------------------------------------`;
 console.log(logo);
 
+const yumemi = new Yumemi();
+const bot = yumemi.login();
+
+bot.on("message", (data) => console.log(data));
+// const uin = 437402067;
 // const bot = createClient(uin);
-// const { qq, config, info } = tools.getProfile('botSettings');
 
-// global.bot = createClient(qq.account, config);
+// bot.logger.mark(`Package Version: ${version} (Released on ${released})`);
+// bot.logger.mark(`View Changelogs：${changelogs}`);
+// bot.logger.mark(`----------`);
 
-// const linkStart = async () => {
-//   //处理滑动验证码事件
-//   bot.on("system.login.slider", () => {
-//     process.stdin.once("data", input => {
-//       bot.sliderLogin(input);
-//     });
-//   });
 
-//   //处理图片验证码事件
-//   bot.on("system.login.captcha", () => {
-//     process.stdin.once("data", input => {
-//       bot.captchaLogin(input);
-//     });
-//   });
+// 监听并输入滑动验证码 ticket
+// bot.on("system.login.slider", () => {
+//        process.stdin.once("data", (input: any): void => {
+//               bot.sliderLogin(input);
+//        });
+// });
 
-//   //处理设备锁验证事件
-//   bot.on("system.login.device", () => {
-//     bot.logger.info("手机扫码完成后按下 Enter 继续...");
-//     process.stdin.once("data", () => {
-//       bot.login();
-//     });
-//   });
-
-//   bot.login(qq.password);
-// }
-
-// linkStart().then(() => {
-//   const { version, released, changelogs } = info;
-//   bot.logger.mark(`----------`);
-//   bot.logger.mark(`Package Version: ${ version } (Released on ${ released })`);
-//   bot.logger.mark(`View Changelogs：${ changelogs }`);
-//   bot.logger.mark(`----------`);
-//   require(`${__yumemi}/serve`);
+// // 监听设备锁验证
+// bot.on("system.login.device", () => {
+//        bot.logger.info("手机扫码完成后按下 Enter 继续...");
+//        process.stdin.once("data", () => {
+//               bot.login();
+//        });
 // });

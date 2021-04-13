@@ -13,7 +13,7 @@
   },
   "keywords": [],
   "author": "dc_yuki",
-  "license": "ISC",
+  "license": "GPL",
   "dependencies": {
     "oicq": "^1.15.1",
     "ts-node": "^9.1.1",
