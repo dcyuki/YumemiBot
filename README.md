@@ -15,4 +15,4 @@
 
 *****
 
-> 本项目是一个基于 [OneBot](https://github.com/howmanybots/onebot) 协议，使用 [JavaScript](https://www.javascript.com/) 语言开发的 [QQ](https://im.qq.com/) 机器人
+> 本项目是一个基于 [oicq](https://github.com/takayama-lily/oicq) 框架，使用 [JavaScript](https://www.javascript.com/) 语言开发的 [QQ](https://im.qq.com/) 机器人
