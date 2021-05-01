@@ -126,7 +126,6 @@ bot.on('message.group', data => {
 
             // 模块是否启用
             if (/^[a-z]/.test(plugin)) {
-              console.log(plugins)
               const { plugins: { [plugin]: { enable } } } = group;
 
               if (!enable) return bot.sendGroupMsg(ctx.group_id, `当前群聊 ${plugin} 模块未启用...`);

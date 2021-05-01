@@ -1,14 +1,19 @@
 # bot 账号
 qq:
   # 维护组 QQ 账号
-  admin: 2225151531
+  admin:
+    - 2225151531
   # 主  人 QQ 账号
-  master: <your master qq number>
-  # 机器人 QQ 账号
-  account: <your bot qq number>
-  # 机器人 QQ 密码
-  password: <your bot qq password or 32bit md5>
-
+  master:
+    - <your master qq number>
+  # 机器人 QQ 信息
+  account:
+    # 机器人 QQ 账号
+    user_id: 
+      - <your bot qq number>
+    # 机器人 QQ 密码
+    password: 
+      - <your bot qq password or 32bit md5>
 # web 服务
 web:
   # 端口号

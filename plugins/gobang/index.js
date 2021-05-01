@@ -7,8 +7,13 @@ class Battle {
     this.history = [];
   }
 
-  get board(){
+  set setBoard(val) {
+    this.board = val;
+    this.offensive = !this.offensive;
+  }
 
+  get getBoard() {
+    return this.board;
   }
 }
 
@@ -30,10 +35,10 @@ class Gobang {
     this.card = card;
   }
 
-  get all_battle(){
+  get all_battle() {
 
   }
-  
+
   // 创建对局
   start() {
     if (Gobang.all_battle.has(this.group_id)) return bot.sendGroupMsg(this.group_id, '当前群聊对局尚未结束，请勿重复开启');
@@ -69,7 +74,7 @@ class Gobang {
     const battle = new Battle(this.user_id, board);
     Gobang.all_battle.set(this.group_id, battle);
 
-    bot.sendGroupMsg(this.group_id, battle.board.join('\n'))
+    bot.sendGroupMsg(this.group_id, battle.getBoard.join('\n'))
   }
 
   // 落子
@@ -109,15 +114,13 @@ class Gobang {
       return bot.sendGroupMsg(this.group_id, `[CQ:at,qq=${this.user_id}] 还没到你的回合呢，你急啥 (lll￢ω￢)`);
     }
 
-    battle.board[x][y] = offensive ? '●' : '○';
-    // 换手
-    battle.offensive = !offensive;
+    battle.setBoard = board[x][y] = offensive ? '●' : '○';
 
     // 记录落子
     battle.history.push([x, y]);
 
     // 落子后发送新的棋盘数据
-    bot.sendGroupMsg(this.group_id, battle.board.join('\n'));
+    bot.sendGroupMsg(this.group_id, battle.getBoard.join('\n'));
   }
 
   // 悔棋
@@ -133,9 +136,7 @@ class Gobang {
       return;
     }
 
-    battle.history.
-    // 换手
-    battle.offensive = !offensive;
+    // battle.history
 
     const [x, y] = this.history[this.history.length - 1];
 

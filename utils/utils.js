@@ -1,6 +1,5 @@
 const fs = require('fs');
 const yaml = require('js-yaml');
-const { resolve } = require('path');
 
 const config_path = `${__yumemi}/config/`;
 
