@@ -1,7 +1,7 @@
 # acgmx
 acgmx:
-    url: https://api.acgmx.com/public/
-    key: # <your acgmx apikey>
+  url: https://api.acgmx.com/public/
+  key: # <your acgmx apikey>
 
 # lolicon
 lolicon:

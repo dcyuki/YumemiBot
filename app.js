@@ -1,4 +1,5 @@
 const { createClient } = require('oicq');
+const { getConfig, getConfigSync, getDir, exists, updateGroup } = require('./utils/util');
 
 class Bot {
   constructor(account, password, config) {
@@ -7,6 +8,7 @@ class Bot {
     this.config = config;
   }
 
+  // 账号登录
   linkStart() {
     const bot = createClient(this.account, this.config);
 
@@ -26,6 +28,7 @@ class Bot {
     });
 
     bot.login(this.password);
+
     return bot;
   }
 }
@@ -47,16 +50,13 @@ const logo = `------------------------------------------------------------------
                                                                              _         
       \\    / _  | |  _  _  ._ _   _    _|_  _    \\_/    ._ _   _  ._ _  o   |_)  _ _|_ 
        \\/\\/ (/_ | | (_ (_) | | | (/_    |_ (_)    | |_| | | | (/_ | | | |   |_) (_) |_ 
-                                                                                  
+
 --------------------------------------------------------------------------------------------`;
 console.log(logo);
+const { qq: { admin, master, account, password }, info: { version, released, changelogs }, config } = getConfigSync('bot');
+console.log(config)
 
-global.__yumemi = `${__dirname}`;
-global.utils = require('./utils/utils');
-
-// await 实例化 Bot 对象
-const { qq: { admin, master, account, password }, info: { version, released, changelogs }, config } = utils.getConfigSync('bot');
-
+global.__yumemi = __dirname;
 global.bot = new Bot(account, password, config).linkStart();
 
 // 打印 bot 信息
@@ -70,14 +70,14 @@ let plugins = {};
 // 登录成功后加载插件
 bot.on('system.online', () => {
   // async 加载插件
-  utils.getDir('plugins')
+  getDir('plugins')
     .then(data => {
       bot.logger.mark(`----------`);
       bot.logger.mark('Login success ! 初始化模块...');
 
       for (const plugin of data) {
         // 插件是否存在 index.js 文件
-        utils.exists(`./plugins/${plugin}/index.js`)
+        exists(`./plugins/${plugin}/index.js`)
           .then(() => {
             plugins[plugin] = require(`./plugins/${plugin}/index`);
             // bot.logger.mark(`plugin loaded: ${plugin}`);
@@ -100,21 +100,21 @@ bot.on('system.online', () => {
 
 // 监听群消息
 bot.on('message.group', data => {
-  // 实例化 Context 对象
+  // 创建 ctx 实例
   const { message_id, group_id, group_name, raw_message, sender: { user_id, nickname, card, level: lv, role } } = data;
   const level = user_id !== admin ? (user_id !== master ? (role === 'member' ? (lv < 5 ? (lv < 3 ? 0 : 1) : 2) : (role === 'admin' ? 3 : 4)) : 5) : 6;
   const ctx = new Context(message_id, group_id, group_name, raw_message, user_id, nickname, card, level)
 
   // 校验 group.yml
-  utils.updateGroup(ctx.group_id, ctx.group_name);
+  updateGroup(ctx.group_id, ctx.group_name);
 
   // 获取群聊信息
-  utils.getConfig('groups')
+  getConfig('groups')
     .then(data => {
       const group = data[group_id];
 
       // 正则匹配
-      group.enable && utils.getConfig('cmd').then(data => {
+      group.enable && getConfig('cmd').then(data => {
         const cmd = data;
 
         out:
@@ -132,7 +132,6 @@ bot.on('message.group', data => {
             }
 
             new plugins[plugin](ctx)[serve]();
-
             break out;
           }
         }
@@ -141,4 +140,4 @@ bot.on('message.group', data => {
     .catch(err => {
       bot.logger.error(err);
     })
-});
+})

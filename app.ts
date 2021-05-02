@@ -1,10 +1,10 @@
 import { createClient } from 'oicq';
-import { getConfigSync } from './utils/util';
+import { getConfig, getConfigSync, getDir, exists, updateGroup } from './utils/util';
 
 class Bot {
-  account: number;
-  password: string;
-  config: object;
+  private account: number;
+  private password: string;
+  private config: object;
 
   constructor(account: number, password: string, config?: object) {
     this.account = account;
@@ -38,14 +38,14 @@ class Bot {
 }
 
 class Context {
-  message_id: string;
-  group_id: number;
-  group_name: string;
-  raw_message: string;
-  user_id: number;
-  nickname: string;
-  card: string;
-  level: number;
+  readonly message_id: string;
+  readonly group_id: number;
+  readonly group_name: string;
+  readonly raw_message: string;
+  readonly user_id: number;
+  readonly nickname: string;
+  readonly card: string;
+  readonly level: number;
 
   constructor(message_id: string, group_id: number, group_name: string, raw_message: string, user_id: number, nickname: string, card: string, level: number) {
     this.message_id = message_id;
@@ -59,8 +59,6 @@ class Context {
   }
 }
 
-const bot = new Set();
-
 const logo: string = `--------------------------------------------------------------------------------------------
                                                                              _         
       \\    / _  | |  _  _  ._ _   _    _|_  _    \\_/    ._ _   _  ._ _  o   |_)  _ _|_ 
@@ -69,26 +67,19 @@ const logo: string = `----------------------------------------------------------
 --------------------------------------------------------------------------------------------`;
 console.log(logo);
 
-const { qq: { admin, master, account: { user_id, password } } } = getConfigSync('bot');
-
-if (user_id.length !== password.length) {
-  throw new Error('检测到你配置的账号数量与密码数量不匹配，已终止运行...')
-}
+const { qq: { admin, master, account, password }, info: { version, released, changelogs }, config } = getConfigSync('bot');
 
 // 创建 bot 实例
-for (let i = 0; i < user_id.length; i++) {
-  bot.add(new Bot(user_id[i], password[i]).linkStart());
-}
+(globalThis as any).bot = new Bot(account, password, config).linkStart();
 
-bot.forEach((bot: any) => {
-  // 监听群消息
-  bot.on('message.group', data => {
-    // 创建 ctx 实例
-    const { message_id, group_id, group_name, raw_message, sender: { user_id, nickname, card, level: lv, role } } = data;
-    const level = admin.indexOf(user_id) === -1 ? (master.indexOf(user_id) === -1 ? (role === 'member' ? (lv < 5 ? (lv < 3 ? 0 : 1) : 2) : (role === 'admin' ? 3 : 4)) : 5) : 6;
-    const ctx = new Context(message_id, group_id, group_name, raw_message, user_id, nickname, card, level)
-    console.log(ctx)
-    // 校验 group.yml
-    // updateGroup(ctx.group_id, ctx.group_name);
-  })
-})
+const { bot } = <any>globalThis;
+
+// 打印 bot 信息
+bot.logger.mark(`----------`);
+bot.logger.mark(`Package Version: ${version} (Released on ${released})`);
+bot.logger.mark(`View Changelogs：${changelogs}`);
+bot.logger.mark(`----------`);
+
+bot.on('message.group', (data: any): void => {
+  console.log(data)
+});
