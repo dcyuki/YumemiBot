@@ -54,7 +54,6 @@ const logo = `------------------------------------------------------------------
 --------------------------------------------------------------------------------------------`;
 console.log(logo);
 const { qq: { admin, master, account, password }, info: { version, released, changelogs }, config } = getConfigSync('bot');
-console.log(config)
 
 global.__yumemi = __dirname;
 global.bot = new Bot(account, password, config).linkStart();
@@ -69,6 +68,9 @@ let plugins = {};
 
 // 登录成功后加载插件
 bot.on('system.online', () => {
+  // 校验 group.yml
+  // updateGroup(ctx.group_id, ctx.group_name);
+
   // async 加载插件
   getDir('plugins')
     .then(data => {
@@ -104,14 +106,14 @@ bot.on('message.group', data => {
   const { message_id, group_id, group_name, raw_message, sender: { user_id, nickname, card, level: lv, role } } = data;
   const level = user_id !== admin ? (user_id !== master ? (role === 'member' ? (lv < 5 ? (lv < 3 ? 0 : 1) : 2) : (role === 'admin' ? 3 : 4)) : 5) : 6;
   const ctx = new Context(message_id, group_id, group_name, raw_message, user_id, nickname, card, level)
-
+  
   // 校验 group.yml
   updateGroup(ctx.group_id, ctx.group_name);
 
   // 获取群聊信息
   getConfig('groups')
     .then(data => {
-      const group = data[group_id];
+      const group = data[ctx.group_id] || {};
 
       // 正则匹配
       group.enable && getConfig('cmd').then(data => {

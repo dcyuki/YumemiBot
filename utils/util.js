@@ -200,5 +200,6 @@ const updateGroup = (group_id, group_name) => {
 
 module.exports = {
   getConfig, getConfigSync, setConfig,
-  getDir, getDirSync, exists, updateGroup
+  getDir, getDirSync, exists, updateGroup,
+  scheduleJob
 }
