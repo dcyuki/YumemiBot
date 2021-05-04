@@ -13,42 +13,35 @@ class Buy {
   }
 }
 
-getDir('buy')
-  .then(data => Buy.images = data)
+getDir('buy').then(data => Buy.images = data);
 
 // 东八时区
-scheduleJob('0 0 0/6 * * ?', () => {
-  getConfig('groups')
-    .then(data => {
-      const groups = [];
+scheduleJob('0 0 0/6 * * ?', async () => {
+  const all_group = [];
+  const groups = await getConfig('groups');
 
-      // 判断开启服务的群
-      for (const group_id in data) {
-        if (!data[group_id].enable) continue;
+  // 判断开启服务的群
+  for (const group_id in groups) {
+    if (!groups[group_id].enable) continue;
 
-        data[group_id].plugins.buy.enable &&
-          data[group_id].plugins.buy.version === 'cn' && groups.push(group_id);
-      }
+    groups[group_id].plugins.buy.enable && groups[group_id].plugins.buy.version === 'cn' && all_group.push(group_id);
+  }
 
-      Buy.send(groups)
-    })
+  Buy.send(all_group)
 });
 
 // 东九时区
-scheduleJob('0 0 1,7,13,19 * * ? ', () => {
-  getConfig('groups')
-    .then(data => {
-      const groups = [];
+scheduleJob('0 0 1,7,13,19 * * ? ', async () => {
+  const all_group = [];
+  const groups = await getConfig('groups');
 
-      for (const group_id in data) {
-        if (!data[group_id].enable) continue;
+  for (const group_id in groups) {
+    if (!groups[group_id].enable) continue;
 
-        data[group_id].plugins.buy.enable &&
-          data[group_id].plugins.buy.version === 'jp' && groups.push(group_id);
-      }
+    groups[group_id].plugins.buy.enable && groups[group_id].plugins.buy.version === 'jp' && all_group.push(group_id);
+  }
 
-      Buy.send(groups)
-    })
+  Buy.send(all_group)
 });
 
 module.exports = Buy;

@@ -3,18 +3,18 @@ qq:
   # 维护组 QQ 账号
   admin: 2225151531
   # 主  人 QQ 账号
-  master:        # <your master qq number>
+  master:     # <your master qq number>
   # 机器人 QQ 账号
-  account:       # <your bot qq number>
+  account:    # <your bot qq number>
   # 机器人 QQ 密码
-  password:      # <your bot qq password or 32bit md5>
+  password:   # <your bot qq password or 32bit md5>
 
 # web 服务
 web:
   # 端口号
   port: 80
   # 域  名
-  domain:        # <you domain name or ip address>
+  domain:     # <you domain name or ip address>
 
 ################ 以下配置一般无需修改 ################
 

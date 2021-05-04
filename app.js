@@ -1,5 +1,6 @@
+const axios = require('axios');
 const { createClient } = require('oicq');
-const { getConfig, getConfigSync, getDir, exists, updateGroup } = require('./utils/util');
+const { getConfig, getDir, exists, updateGroup } = require('./utils/util');
 
 class Bot {
   constructor(account, password, config) {
@@ -53,39 +54,44 @@ const logo = `------------------------------------------------------------------
 
 --------------------------------------------------------------------------------------------`;
 console.log(logo);
-const { qq: { admin, master, account, password }, info: { version, released, changelogs }, config } = getConfigSync('bot');
 
-global.__yumemi = __dirname;
-global.bot = new Bot(account, password, config).linkStart();
+getConfig('bot')
+  .then(data => {
+    const { qq: { admin, master, account, password }, info: { version, released, changelogs }, config } = data;
 
-// 打印 bot 信息
-bot.logger.mark(`----------`);
-bot.logger.mark(`Package Version: ${version} (Released on ${released})`);
-bot.logger.mark(`View Changelogs：${changelogs}`);
-bot.logger.mark(`----------`);
+    global.__yumemi = __dirname;
+    global.bot = new Bot(account, password, config).linkStart();
 
-let plugins = {};
+    // 打印 bot 信息
+    bot.logger.mark(`----------`);
+    bot.logger.mark(`Package Version: ${version} (Released on ${released})`);
+    bot.logger.mark(`View Changelogs：${changelogs}`);
+    bot.logger.mark(`----------`);
 
-// 登录成功后加载插件
-bot.on('system.online', () => {
-  // 校验 group.yml
-  // updateGroup(ctx.group_id, ctx.group_name);
+    // 插件加载
+    let plugins = {};
 
-  // async 加载插件
-  getDir('plugins')
-    .then(data => {
+    // 登录成功后加载插件
+    bot.on('system.online', async () => {
+      // 校验 group.yml
+      // updateGroup(ctx.group_id, ctx.group_name);
+
+      // 获取插件列表
+      const plugin_dir = await getDir('plugins');
+
       bot.logger.mark(`----------`);
       bot.logger.mark('Login success ! 初始化模块...');
 
-      for (const plugin of data) {
+      for (const plugin of plugin_dir) {
         // 插件是否存在 index.js 文件
         exists(`./plugins/${plugin}/index.js`)
           .then(() => {
             plugins[plugin] = require(`./plugins/${plugin}/index`);
             // bot.logger.mark(`plugin loaded: ${plugin}`);
           })
-          .catch(() => {
+          .catch(err => {
             bot.logger.warn(`${plugin} 模块未加载`);
+            bot.logger.warn(`${err.message}`);
           })
           .finally(() => {
             // bot.logger.mark(`加载了${Object.keys(plugins).length}个插件`);
@@ -94,26 +100,20 @@ bot.on('system.online', () => {
 
       bot.logger.mark(`初始化完毕，开始监听群聊。`);
       bot.logger.mark(`----------`);
-    })
-    .catch(err => {
-      bot.logger.error(err);
-    })
-})
+    });
 
-// 监听群消息
-bot.on('message.group', data => {
-  // 创建 ctx 实例
-  const { message_id, group_id, group_name, raw_message, sender: { user_id, nickname, card, level: lv, role } } = data;
-  const level = user_id !== admin ? (user_id !== master ? (role === 'member' ? (lv < 5 ? (lv < 3 ? 0 : 1) : 2) : (role === 'admin' ? 3 : 4)) : 5) : 6;
-  const ctx = new Context(message_id, group_id, group_name, raw_message, user_id, nickname, card, level)
-  
-  // 校验 group.yml
-  updateGroup(ctx.group_id, ctx.group_name);
+    // 监听群消息
+    bot.on('message.group', async data => {
+      // 创建 ctx 实例
+      const { message_id, group_id, group_name, raw_message, sender: { user_id, nickname, card, level: lv, role } } = data;
+      const level = user_id !== admin ? (user_id !== master ? (role === 'member' ? (lv < 5 ? (lv < 3 ? 0 : 1) : 2) : (role === 'admin' ? 3 : 4)) : 5) : 6;
+      const ctx = new Context(message_id, group_id, group_name, raw_message, user_id, nickname, card, level)
 
-  // 获取群聊信息
-  getConfig('groups')
-    .then(data => {
-      const group = data[ctx.group_id] || {};
+      // 校验 group.yml
+      updateGroup(ctx.group_id, ctx.group_name);
+
+      // 获取群聊信息
+      const group = await getConfig('groups').then(data => data ? data[ctx.group_id] : {});
 
       // 正则匹配
       group.enable && getConfig('cmd').then(data => {
@@ -139,7 +139,7 @@ bot.on('message.group', data => {
         }
       });
     })
-    .catch(err => {
-      bot.logger.error(err);
-    })
-})
+  })
+  .catch(err => {
+    throw err;
+  })

@@ -1,4 +1,4 @@
-class Battle {
+class Game {
   constructor(user_id, board) {
     this.black = user_id;
     this.white = 0;
@@ -20,7 +20,7 @@ class Battle {
 }
 
 class Gobang {
-  static all_battle = new Map();
+  static all_game = new Map();
   static chess = new Set(['●', '○']);
   static reg = { x: /[a-zA-Z]/g, y: /[0-9]/g };
   static delta = [[[0, 1], [0, -1]], [[-1, 0], [1, 0]], [[-1, -1], [1, 1]], [[1, -1], [-1, 1]],];
@@ -39,7 +39,7 @@ class Gobang {
 
   // 创建对局
   start() {
-    if (Gobang.all_battle.has(this.group_id)) return bot.sendGroupMsg(this.group_id, '当前群聊对局尚未结束，请勿重复开启');
+    if (Gobang.all_game.has(this.group_id)) return bot.sendGroupMsg(this.group_id, '当前群聊对局尚未结束，请勿重复开启');
 
     // 获取棋盘大小，默认 10 * 10
     const board = [];
@@ -70,10 +70,10 @@ class Gobang {
     Gobang.numbers.length = board_size + 2;
     board.unshift(Gobang.numbers);
 
-    const battle = new Battle(this.user_id, board);
-    Gobang.all_battle.set(this.group_id, battle);
+    const game = new Game(this.user_id, board);
+    Gobang.all_game.set(this.group_id, game);
 
-    bot.sendGroupMsg(this.group_id, battle.board.join('\n'));
+    bot.sendGroupMsg(this.group_id, game.board.join('\n'));
 
     setTimeout(() => {
       this.over('因长时间未分出胜负');
@@ -82,22 +82,22 @@ class Gobang {
 
   // 落子
   move() {
-    if (!Gobang.all_battle.has(this.group_id)) return bot.sendGroupMsg(this.group_id, `当前群聊未开启对局`);
-    
-    const battle = Gobang.all_battle.get(this.group_id);
-    const { board, offensive } = battle;
+    if (!Gobang.all_game.has(this.group_id)) return bot.sendGroupMsg(this.group_id, `当前群聊未开启对局`);
+
+    const game = Gobang.all_game.get(this.group_id);
+    const { board, offensive } = game;
 
     // 白棋未录入棋手则判断记录
-    if (!battle.white && battle.black !== this.user_id) {
-      battle.white = this.user_id;
+    if (!game.white && game.black !== this.user_id) {
+      game.white = this.user_id;
       bot.sendGroupMsg(this.group_id, `${this.card ? this.card : this.nickname} 加入当前对局`);
     }
 
     let msg = null;
-    const { black, white } = battle;
+    const { black, white } = game;
 
     switch (true) {
-      case !Gobang.all_battle.has(this.group_id):
+      case !Gobang.all_game.has(this.group_id):
         msg = `当前群聊未开启对局`;
         break;
       case this.user_id !== white && this.user_id !== black:
@@ -124,10 +124,10 @@ class Gobang {
     if (!board[x][y]) return bot.sendGroupMsg(this.group_id, `[CQ:at,qq=${this.user_id}] 越界了，亲 (╯▔皿▔)╯`);
 
     board[x][y] = offensive ? '●' : '○';
-    battle.board = board;
+    game.board = board;
 
     // 记录落子
-    battle.history.push([x, y]);
+    game.history.push([x, y]);
 
     // 落子后发送新的棋盘数据
     bot.sendGroupMsg(this.group_id, board.join('\n'));
@@ -145,7 +145,7 @@ class Gobang {
         if (board[new_x][new_y] === board[x][y]) {
           if (i < 4) continue;
 
-          Gobang.all_battle.delete(this.group_id);
+          Gobang.all_game.delete(this.group_id);
           bot.sendGroupMsg(this.group_id, `check mate！恭喜 [CQ:at,qq=${this.user_id}] 获得本轮胜利~ ヾ(≧▽≦*)o`);
           return;
         } else {
@@ -163,10 +163,10 @@ class Gobang {
 
   // 悔棋
   rollback() {
-    if (!Gobang.all_battle.has(this.group_id)) return bot.sendGroupMsg(this.group_id, `当前群聊未开启对局`);
+    if (!Gobang.all_game.has(this.group_id)) return bot.sendGroupMsg(this.group_id, `当前群聊未开启对局`);
 
-    const battle = Gobang.all_battle.get(this.group_id);
-    const { black, white, board, history } = battle;
+    const game = Gobang.all_game.get(this.group_id);
+    const { black, white, board, history } = game;
 
     // 既不是黑棋手也不是白棋手则指指点点
     if (this.user_id !== white && this.user_id !== black) {
@@ -174,23 +174,23 @@ class Gobang {
       return;
     }
 
-    if (battle.history.length < 1) {
+    if (game.history.length < 1) {
       return bot.sendGroupMsg(this.group_id, `[CQ:at,qq=${this.user_id}] 当前对局没有历史记录`);
     }
 
     const [x, y] = history[history.length - 1];
 
     board = board[x][y] = '┼';
-    battle.board = board;
+    game.board = board;
 
     bot.sendGroupMsg(this.group_id, board.join('\n'));
   }
 
   // 结束对局
   over(msg = `${this.card ? this.card : this.nickname} 认输`) {
-    if (!Gobang.all_battle.has(this.group_id)) return;
+    if (!Gobang.all_game.has(this.group_id)) return;
 
-    Gobang.all_battle.delete(this.group_id);
+    Gobang.all_game.delete(this.group_id);
     bot.sendGroupMsg(this.group_id, `${msg}，已中止当前五子棋对局`);
   }
 }

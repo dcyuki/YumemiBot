@@ -1,6 +1,7 @@
 const fs = require('fs');
 const yaml = require('js-yaml');
 const schedule = require('node-schedule');
+const { resolve } = require('path');
 
 const config_path = `./config/`;
 
@@ -16,25 +17,9 @@ const getConfig = (file_name, file_folder = config_path) => {
     const file_path = `${file_folder}${file_name}.yml`;
 
     fs.readFile(file_path, (err, data) => {
-      err ? reject(err) : resolve(yaml.load(data));
+      !err ? resolve(yaml.load(data)) : reject(err);
     });
   });
-}
-
-/**
- * await 获取配置文件信息
- * 
- * @param {string} file_name 文件名（不包括后缀）
- * @param {string} [file_folder=config_path] 文件夹路径
- */
-const getConfigSync = (file_name, file_folder = config_path) => {
-  const file_path = `${file_folder}${file_name}.yml`;
-
-  try {
-    return yaml.load(fs.readFileSync(file_path));
-  } catch (err) {
-    throw err;
-  }
 }
 
 /**
@@ -45,13 +30,17 @@ const getConfigSync = (file_name, file_folder = config_path) => {
  * @param {string} [file_folder=config_path] 文件夹路径
  */
 const setConfig = (file_name, data, file_folder = config_path) => {
-  const file_path = `${file_folder}${file_name}.yml`;
+  return new Promise((resolve, reject) => {
+    const file_path = `${file_folder}${file_name}.yml`;
 
-  fs.writeFile(file_path, yaml.dump(data), err => {
-    if (err) throw err;
-
-    bot.logger.info(`已更新 ${file_name}.yml 配置文件 ♪`);
-  });
+    fs.writeFile(file_path, yaml.dump(data), err => {
+      !err ?
+        resolve(
+          bot.logger.info(`已更新 ${file_name}.yml 配置文件 ♪`)
+        ) :
+        reject(err);
+    });
+  })
 }
 
 /**
@@ -91,54 +80,6 @@ const getDir = folder => {
 }
 
 /**
- * await 获取文件目录
- * 
- * @param {string} folder 文件夹名
- */
-const getDirSync = (folder) => {
-  let dir = null;
-
-  try {
-    switch (folder) {
-      case 'plugins':
-        // dir = fs.readdirSync(`${__yumemi}/plugins`).filter(plugin => /^[a-z]+$/.test(plugin));
-        dir = fs.readdirSync(`./plugins`);
-        break;
-
-      case 'buy':
-        dir = fs.readdirSync(`./data/images/buy`);
-        break;
-
-      case 'setu':
-        dir = {
-          r17: fs.readdirSync(`./data/images/setu/r17`),
-          r18: fs.readdirSync(`./data/images/setu/r18`),
-        };
-        break;
-    }
-
-    return dir;
-  } catch (err) {
-    throw err;
-  }
-}
-
-/**
- * await 检测文件是否存在
- * 
- * @param {string} path - 文件路径
- */
-const existsSync = path => {
-  try {
-    fs.accessSync(path);
-
-    return true;
-  } catch (err) {
-    throw err;
-  }
-}
-
-/**
  * schedule 定时任务
  */
 const scheduleJob = schedule.scheduleJob;
@@ -151,7 +92,7 @@ const scheduleJob = schedule.scheduleJob;
 const exists = path => {
   return new Promise((resolve, reject) => {
     fs.access(path, err => {
-      !err ? resolve(true) : reject(err);
+      !err ? resolve() : reject(err);
     });
   });
 }
@@ -162,11 +103,11 @@ const exists = path => {
  * @param {number} group_id 群号
  * @param {string} group_name 群名
  */
-const updateGroup = (group_id, group_name) => {
+const updateGroup = async (group_id, group_name) => {
   // 不处理静态模块
-  const plugins = getDirSync('plugins').filter(plugin => /^[a-z]+$/.test(plugin));
-  const params = getConfigSync('params');
-  const groups = getConfigSync('groups') || {};
+  const plugins = await getDir('plugins').then(data => data.filter(plugin => /^[a-z]+$/.test(plugin)));
+  const params = await getConfig('params');
+  const groups = await getConfig('groups') || {};
 
   if (groups[group_id] && Object.keys(groups[group_id].plugins).length === plugins.length) return;
 
@@ -199,7 +140,7 @@ const updateGroup = (group_id, group_name) => {
 }
 
 module.exports = {
-  getConfig, getConfigSync, setConfig,
-  getDir, getDirSync, exists, updateGroup,
+  getConfig, setConfig,
+  getDir, exists, updateGroup,
   scheduleJob
 }

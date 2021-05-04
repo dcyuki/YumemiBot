@@ -1,11 +1,14 @@
+battle:
+  version: none
+
 bilibili:
   enable: false
   bl: true
   tw: false
   jp: true
 
-gvg:
-  version: none
+buy:
+  version: cn
 
 saucenao:
   enable: false

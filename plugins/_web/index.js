@@ -1,32 +1,28 @@
 const fs = require('fs');
-const { getConfigSync } = require(`${__yumemi}/utils/util`);
+const { getConfig } = require(`${__yumemi}/utils/util`);
 const Koa = require('koa');
-const router = require('koa-router')();
-const bodyParser = require('koa-bodyparser');
 
 const app = new Koa();
+const router = require('./router');
 
 app.use(async (ctx, next) => {
-  console.log(`Process ${ctx.method} ${ctx.url}`);
-
   await next();
-});
-
-router.get('/', async (ctx, next) => {
-  ctx.body = '<h1>Index</h1>';
-});
-
-router.post('/api/:api', async (ctx, next) => {
-  const api = ctx.params.api;
-  ctx.body = `${api}`;
-});
+  console.log(ctx.socket.remoteAddress)
+  console.log(`Process ${ctx.request.method} ${ctx.request.url}`);
+  ctx.status === 404 && ctx.redirect('/error');
+})
 
 app.use(router.routes());
-app.use(bodyParser());
 
-const { web: { port, domain } } = getConfigSync('bot');
+getConfig('bot')
+  .then(data => {
+    const { web: { port, domain } } = data;
 
-// 在端口监听
-app.listen(port);
-
-bot.logger.mark(`web serve started at ${domain ? domain : 'localhost'}:${port}`);
+    // 在端口监听
+    app.listen(port, () => {
+      bot.logger.mark(`web serve started at ${domain ? domain : 'localhost'}:${port}`);
+    });
+  })
+  .catch(err => {
+    bot.logger.error(err);
+  })

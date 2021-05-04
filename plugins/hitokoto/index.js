@@ -43,14 +43,11 @@ getConfig('api')
   })
 
 // 每天24点定时发送
-scheduleJob('0 0 0 * * ?', () => {
-  getConfig('groups')
-    .then(data => {
-      const ctx = {};
-      const groups = data;
+scheduleJob('0 0 0 * * ?', async () => {
+  const ctx = {};
+  const groups = await getConfig('groups');
 
-      new Hitokoto(ctx).send(groups);
-    })
+  new Hitokoto(ctx).send(groups);
 });
 
 module.exports = Hitokoto;

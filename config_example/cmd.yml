@@ -15,13 +15,7 @@ _tips:
   settings: ^(设置|settings)$
   ver: ^(版本|ver|version)$
 
-gobang:
-  start: ^五子棋[\s]?[5-9]?$
-  move: ^落子[\s]?[a-zA-Z][1-9]+[0-9]?$
-  rollback: ^悔棋$
-  over: ^((结束|中止)对局|认输)$
-
-gvg:
+battle:
   initGuild: ^设置(国|台|日)服公会$
   insertBattle: ^开启[\S][\S]座会战$
   insertFight: (^报刀[\s]?[0-9]+$|^尾刀$)
@@ -37,8 +31,14 @@ gvg:
   # score: ^分数线$
   # rank: ^查询排名[\s][\S]+[\s]?[\S]*$
 
+gobang:
+  start: ^五子棋[\s]?[5-9]?$
+  move: ^落子[\s]?[a-zA-Z][1-9]+[0-9]?$
+  rollback: ^悔棋$
+  over: ^((结束|中止)对局|认输)$
+
 hitokoto:
-  cyuuni: ^来点骚话$
+  send: ^来点骚话$
 
 saucenao:
   search: ^(搜图|\[CQ:image,file=.+,url=.+\])$
