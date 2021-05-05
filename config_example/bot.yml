@@ -23,13 +23,14 @@ info:
   # 版本信息
   version: yumemi_bot@0.6.0
   # 提交日期
-  released: 2021/5/2
+  released: 2021/5/5
   # 使用手册
   docs: https://docs.littlemaple.club/#/help/
   # 更新日志
   changelogs: https://docs.littlemaple.club/#/changelog/
 
 # bot 配置
+# https://github.com/takayama-lily/oicq/blob/master/client.d.ts#ConfBot
 config:
   # 日志输出
   log_level: debug

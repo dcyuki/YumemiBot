@@ -1,9 +1,8 @@
 const fs = require('fs');
 const yaml = require('js-yaml');
 const schedule = require('node-schedule');
-const { resolve } = require('path');
 
-const config_path = `./config/`;
+const config_path = `./config`;
 
 /**
  * async 获取配置文件信息
@@ -14,7 +13,7 @@ const config_path = `./config/`;
 
 const getConfig = (file_name, file_folder = config_path) => {
   return new Promise((resolve, reject) => {
-    const file_path = `${file_folder}${file_name}.yml`;
+    const file_path = `${file_folder}/${file_name}.yml`;
 
     fs.readFile(file_path, (err, data) => {
       !err ? resolve(yaml.load(data)) : reject(err);
@@ -31,7 +30,7 @@ const getConfig = (file_name, file_folder = config_path) => {
  */
 const setConfig = (file_name, data, file_folder = config_path) => {
   return new Promise((resolve, reject) => {
-    const file_path = `${file_folder}${file_name}.yml`;
+    const file_path = `${file_folder}/${file_name}.yml`;
 
     fs.writeFile(file_path, yaml.dump(data), err => {
       !err ?

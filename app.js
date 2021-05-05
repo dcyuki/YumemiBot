@@ -113,7 +113,7 @@ getConfig('bot')
       updateGroup(ctx.group_id, ctx.group_name);
 
       // 获取群聊信息
-      const group = await getConfig('groups').then(data => data ? data[ctx.group_id] : {});
+      const group = await getConfig('groups').then(data => data ? data : {}, data[ctx.group_id] ? data[ctx.group_id] : {});
 
       // 正则匹配
       group.enable && getConfig('cmd').then(data => {

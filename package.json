@@ -16,6 +16,7 @@
   "license": "GPL",
   "dependencies": {
     "axios": "^0.21.1",
+    "bili-api": "^1.6.0",
     "js-md5": "^0.7.3",
     "js-yaml": "^4.1.0",
     "koa": "^2.13.1",
