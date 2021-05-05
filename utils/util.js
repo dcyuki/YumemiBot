@@ -68,6 +68,9 @@ const getDir = folder => {
           r18: fs.readdirSync(`./data/images/setu/r18`),
         };
         break;
+      case 'rank':
+        dir = fs.readdirSync(`./data/images/rank`);
+        break;
 
       default:
         reject(new Error(`${folder} is not a parameter`))

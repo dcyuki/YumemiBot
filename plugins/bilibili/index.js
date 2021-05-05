@@ -60,7 +60,7 @@ class Bilibili {
     })
   }
 
-  static sendMsg() {
+  static async sendMsg() {
     // 获取 dynamic_id
     const bilibili = await getConfig('bilibili', __dirname);
     const groups = await getConfig('groups');
@@ -110,5 +110,5 @@ class Bilibili {
 
 // 每5分钟监听并发送动态
 scheduleJob('0 0/5 * * * ?', async () => {
-  sendMsg();
+  Bilibili.sendMsg();
 });

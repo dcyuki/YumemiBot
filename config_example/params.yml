@@ -3,9 +3,8 @@ battle:
 
 bilibili:
   enable: false
-  bl: true
-  tw: false
-  jp: true
+  pcr_bl: true
+  pcr_jp: true
 
 buy:
   version: cn

@@ -7,7 +7,6 @@ const router = require('./router');
 
 app.use(async (ctx, next) => {
   await next();
-  console.log(ctx.socket.remoteAddress)
   console.log(`Process ${ctx.request.method} ${ctx.request.url}`);
   ctx.status === 404 && ctx.redirect('/error');
 })

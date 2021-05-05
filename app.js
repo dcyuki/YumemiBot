@@ -113,7 +113,11 @@ getConfig('bot')
       updateGroup(ctx.group_id, ctx.group_name);
 
       // 获取群聊信息
-      const group = await getConfig('groups').then(data => data ? data : {}, data[ctx.group_id] ? data[ctx.group_id] : {});
+      const group = await getConfig('groups').then(data => {
+        const groups = data ? data : {};
+
+        return groups[ctx.group_id] ? groups[ctx.group_id] : {}
+      });
 
       // 正则匹配
       group.enable && getConfig('cmd').then(data => {
@@ -134,11 +138,22 @@ getConfig('bot')
             }
 
             new plugins[plugin](ctx)[serve]();
+
+            if (serve === 'chat') continue;
             break out;
           }
         }
       });
-    })
+    });
+
+    // 监听群事件
+    // bot.on('notice.group', async data => {
+    //   const { group_id } = data;
+    //   const groups = await getConfig('groups') || {};
+
+    //   if (!group[group_id].enable) return;
+
+    // });
   })
   .catch(err => {
     throw err;
