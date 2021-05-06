@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { getConfig, scheduleJob } = require(`${__yumemi}/utils/util`);
+const { getConfig, scheduleJob } = require('../../utils/util');
 
 class Hitokoto {
   static url = null;

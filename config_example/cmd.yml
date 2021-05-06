@@ -8,7 +8,6 @@ _terminal:
   state: ^>[\s]?state$
 
 _tips:
-  chat: .+
   rank: ^(b|bl|国|t|tw|台|省|j|jp|日)服?rank$
   help: ^(帮助|文档|help)$
   login: ^(登录|login)$

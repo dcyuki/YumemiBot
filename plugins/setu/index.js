@@ -1,176 +1,184 @@
 const fs = require('fs');
 const axios = require('axios');
-const { getConfig, getDir, scheduleJob } = require(`${__yumemi}/utils/util`);
+const { getConfig, getConfigSync, getDir, scheduleJob } = require('../../utils/util');
 
-class Setu {
-  static url = null;
-  static key = null;
-  static max = 20;
-  static lsp = new Map();
-  static path = `${__yumemi}/data/images/setu`;
+const setu_max = 20;
+const lsp = new Map();
+const lsp_max = 5;
+const setu_path = `${__yumemi}/data/images/setu`;
+const { lolicon: { url, key } } = getConfigSync('api');
 
-  constructor(ctx) {
-    const { group_id, user_id, raw_message } = ctx;
+// 每天 5 点重置 lsp
+scheduleJob('0 0 5 * * ?', () => lsp.clear());
 
-    this.group_id = group_id;
-    this.user_id = user_id;
-    this.raw_message = raw_message;
-  }
+// 小黑屋
+const smallBlackRoom = ctx => {
+  const { group_id, user_id, reply } = ctx;
 
-  static async reload() {
-    const setu_dir = await getDir('setu');
-    const { r17: { length: r17_length }, r18: { length: r18_length } } = setu_dir;
+  if (!key) return reply(`你没有添加 apikey ，setu 服务将无法使用！`);
 
-    if (r17_length > Setu.max && r18_length > Setu.max) return bot.logger.info(`当前本地涩图 r17 有 ${r17_length} 张，r18 有 ${r18_length} 张，数量充足，无需补充`);
+  // 判断 lsp 要了几张图，超过 lsp_max 张关小黑屋
+  !lsp.has(user_id) && lsp.set(user_id, 0);
 
-    for (let i = 0; i < 2; i++) {
-      if (eval(`r${17 + i}_length`) > Setu.max) continue;
-
-      axios.get(`${Setu.url}?apikey=${Setu.key}&r18=${i}&num=10&size1200=true`)
-        .then(res => {
-          const { data } = res.data;
-
-          bot.logger.mark(`开始补充 r${17 + i} 涩图`);
-
-          for (let j = 0; j < data.length; j++) {
-            const { url, pid, title } = data[j];
-
-            axios({
-              method: 'get',
-              url: url,
-              responseType: 'stream'
-            })
-              .then(res => {
-                // pid 与 title 之间使用 @ 符分割，title 若出现 /\.[]? 则替换为 -
-                res.data.pipe(fs.createWriteStream(`${Setu.path}/r${17 + i}/${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`))
-              })
-              .catch(err => {
-                bot.logger.error(`${err.message} ${pid}${title}`);
-                return;
-              })
-          }
-        })
-        .catch(err => {
-          bot.logger.error(`获取 r${17 + i} 涩图失败`);
-          bot.logger.error(err.message);
-        });
-
-      // 此处只是 http 请求发送完毕，并非全部下载完毕
-      bot.logger.mark(`r${i + 1} https 请求发送完毕`);
-    }
-
-    bot.logger.info(`r17 :${r17_length} ，r18 ${r18_length} ， ${r17_length < Setu.max ? 'r17, ' : ''}${r18_length < Setu.max ? 'r18' : ''} 数量不足 ${Setu.max}，开始补充库存...`)
-  }
-
-  async random() {
-    // 判断 lsp 要了几张图，超过5张关小黑屋
-    !Setu.lsp.has(this.user_id) && Setu.lsp.set(this.user_id, 0);
-
-    if (Setu.lsp.get(this.user_id) >= 5) {
-      bot.setGroupBan(this.group_id, this.user_id, 60 * 5);
-      bot.sendGroupMsg(this.group_id, `[CQ:at,qq=${this.user_id}] [CQ:image,file=${__yumemi}/data/images/emoji/lsp.jpg]`);
-      return;
-    }
-
-    const { [this.group_id]: { plugins: { setu: { r18, flash } } } } = await getConfig('groups');
-    const { [!r18 ? 'r17' : 'r18']: images } = await getDir('setu');
-
-    if (images.length < 2) return bot.sendGroupMsg(this.group_id, `[CQ:at,qq=${this.user_id}] 他喵的图都被你榨干了，一滴都没有了，请等待自动补充`);
-
-    const file = images.pop();
-    const [pid, title] = file.split('@');
-
-    // 闪图不可与普通消息一起发出，所以此处分割放送
-    bot.sendGroupMsg(this.group_id, `[CQ:at,qq=${this.user_id}]\nid: ${pid}\ntitle: ${title}`);
-    await bot.sendGroupMsg(this.group_id, `[CQ:image,${flash ? 'type=flash,' : ''}file=${Setu.path}/r${17 + r18}/${file}]`)
-      .then(() => {
-        Setu.lsp.set(this.user_id, Setu.lsp.get(this.user_id) + 1);
-
-        fs.unlink(`${Setu.path}/r${17 + r18}/${file}`, err => {
-          !err ?
-            bot.logger.mark(`图片发送成功，已删除 ${file}`) :
-            bot.logger.mark(`文件 ${file} 删除失败`)
-            ;
-        })
-      });
-
-    Setu.reload();
-  }
-
-  async search() {
-    // 判断 lsp 要了几张图，超过5张关小黑屋
-    !Setu.lsp.has(this.user_id) && Setu.lsp.set(this.user_id, 0);
-
-    if (Setu.lsp.get(this.user_id) >= 5) {
-      bot.setGroupBan(this.group_id, this.user_id, 60 * 5);
-      bot.sendGroupMsg(this.group_id, `[CQ:at,qq=${this.user_id}] [CQ:image,file=${__yumemi}/data/images/emoji/lsp.jpg]`);
-      return;
-    }
-
-    const keyword = this.raw_message.slice(2, this.raw_message.length - 2);
-    const { [this.group_id]: { plugins: { setu: { r18, flash } } } } = await getConfig('groups');
-
-    axios.get(`${Setu.url}?apikey=${Setu.key}&r18=${Number(r18)}&keyword=${encodeURI(keyword)}&size1200=true`)
-      .then(res => {
-        const { code, msg, data } = res.data;
-
-        switch (code) {
-          case -1:
-            bot.sendGroupMsg(this.group_id, `${msg} api 炸了`);
-            break;
-
-          case 0:
-            const { url, pid, title } = data[0];
-
-            bot.sendGroupMsg(this.group_id, `[CQ:at,qq=${this.user_id}]\npid: ${pid}\ntitle: ${title}\n----------------\n图片下载中，请耐心等待喵`);
-            bot.sendGroupMsg(this.group_id, `[CQ:image,${flash ? 'type=flash,' : ''}file=${url},cache=1,timeout=10]`)
-              .then(() => {
-                // 有 bug ，若图片发送失败 lsp 还是会增加
-                // oicq 暂时没有图片发送失败的事件回调，以后在改
-                Setu.lsp.set(this.user_id, Setu.lsp.get(this.user_id) + 1);
-              })
-            break;
-
-          case 401:
-            bot.sendGroupMsg(this.group_id, `${msg} apikey 不存在或被封禁`);
-            break;
-
-          case 403:
-            bot.sendGroupMsg(this.group_id, `${msg} 由于不规范的操作而被拒绝调用`);
-            break;
-
-          case 404:
-            bot.sendGroupMsg(this.group_id, `${msg} 请输入合法的 pixiv tag`);
-            break;
-
-          case 429:
-            bot.sendGroupMsg(this.group_id, `${msg} api 达到调用额度限制`);
-            break;
-
-          default:
-            bot.sendGroupMsg(this.group_id, `statusCode: ${code} ，发生意料之外的问题，请联系 yuki`);
-            break;
-        }
-      })
-      .catch(err => {
-        console.log(err)
-      })
+  if (lsp.get(user_id) >= lsp_max) {
+    bot.setGroupBan(group_id, user_id, 60 * 5);
+    reply(`[CQ:at,qq=${user_id}] [CQ:image,file=${__yumemi}/data/images/emoji/lsp.jpg]`);
+    return true;
   }
 }
 
-getConfig('api')
-  .then(data => {
-    const { lolicon: { url, key } } = data;
+// 补充涩图
+const reload = async () => {
+  const setu = await getDir('setu');
+  const { r17: { length: r17_length }, r18: { length: r18_length } } = setu;
 
-    Setu.url = url;
-    Setu.key = key;
+  if (r17_length > setu_max && r18_length > setu_max) return bot.logger.info(`当前本地涩图 r17 有 ${r17_length} 张，r18 有 ${r18_length} 张，数量充足，无需补充`);
 
-    Setu.key ?
-      Setu.reload() :
-      bot.logger.warn(`你没有添加 apikey ，setu 服务将无法使用！`);
-  })
+  for (let i = 0; i < 2; i++) {
+    if (eval(`r${17 + i}_length`) > setu_max) continue;
 
-// 每天 5 点重置 lsp
-scheduleJob('0 0 5 * * ?', () => Setu.lsp.clear());
+    axios.get(`${url}?apikey=${key}&r18=${i}&num=10&size1200=true`)
+      .then(res => {
+        const { data } = res.data;
 
-module.exports = Setu;
+        bot.logger.mark(`开始补充 r${17 + i} 涩图`);
+
+        for (let j = 0; j < data.length; j++) {
+          const { url, pid, title } = data[j];
+
+          axios({
+            method: 'get',
+            url: url,
+            responseType: 'stream'
+          })
+            .then(res => {
+              // pid 与 title 之间使用 @ 符分割，title 若出现 /\.[]? 则替换为 -
+              const setu = `${setu_path}/r${17 + i}/${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`;
+
+              res.data.pipe(fs.createWriteStream(setu));
+            })
+            .catch(err => {
+              bot.logger.error(`${err.message} ${pid}${title}`);
+              return;
+            })
+        }
+      })
+      .catch(err => {
+        bot.logger.error(`获取 r${17 + i} 涩图失败`);
+        bot.logger.error(err.message);
+      });
+
+    // 此处只是 http 请求发送完毕，并非全部下载完毕
+    bot.logger.mark(`r${i + 1} https 请求发送完毕`);
+  }
+
+  bot.logger.info(`r17 :${r17_length} ，r18 ${r18_length} ， ${r17_length < setu_max ? 'r17, ' : ''}${r18_length < setu_max ? 'r18' : ''} 数量不足 ${setu_max}，开始补充库存...`)
+}
+
+const random = async ctx => {
+  if (smallBlackRoom(ctx)) return;
+
+  const { group_id, user_id, reply } = ctx;
+  // 获取群插件设置
+  const { [group_id]: { plugins: { setu: { r18, flash } } } } = await getConfig('groups');
+  const { [!r18 ? 'r17' : 'r18']: images } = await getDir('setu');
+
+  if (images.length < 2) return reply(`[CQ:at,qq=${user_id}] 他喵的图都被你榨干了，一滴都没有了，请等待自动补充`);
+
+  const setu = images.pop();
+  const [pid, title] = setu.split('@');
+
+  // 闪图不可与普通消息一起发出，所以此处分割放送
+  reply(`[CQ:at,qq=${user_id}]\nid: ${pid}\ntitle: ${title}`);
+  reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=${setu_path}/r${17 + r18}/${setu}]`)
+    .then(() => {
+      lsp.set(user_id, lsp.get(user_id) + 1);
+
+      fs.unlink(`${setu_path}/r${17 + r18}/${setu}`, err => {
+        !err ?
+          bot.logger.mark(`图片发送成功，已删除 ${setu}`) :
+          bot.logger.mark(`文件 ${setu} 删除失败`)
+          ;
+      })
+    });
+
+  reload();
+}
+
+const search = async ctx => {
+  if (smallBlackRoom(ctx)) return;
+
+  const { group_id, user_id, reply, raw_message } = ctx;
+  const keyword = raw_message.slice(2, raw_message.length - 2);
+  const { [group_id]: { plugins: { setu: { r18, flash } } } } = await getConfig('groups');
+
+  axios.get(`${url}?apikey=${key}&r18=${Number(r18)}&keyword=${encodeURI(keyword)}&size1200=true`)
+    .then(res => {
+      const { code, msg, data } = res.data;
+
+      switch (code) {
+        case -1:
+          reply(`${msg} api 炸了`);
+          break;
+
+        case 0:
+          const { url, pid, title } = data[0];
+          // pid 与 title 之间使用 @ 符分割，title 若出现 /\.[]? 则替换为 -
+          const setu = `${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`;
+
+          reply(`[CQ:at,qq=${user_id}]\npid: ${pid}\ntitle: ${title}\n----------------\n图片下载中，请耐心等待喵`);
+
+          // 开始下载图片
+          // reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=${url},timeout=10]`);
+
+          axios({
+            method: 'get',
+            url: url,
+            responseType: 'stream'
+          })
+            .then(res => {
+              res.data.pipe(fs.createWriteStream(`${setu_path}/r${17 + r18}/${setu}`));
+              reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=${setu_path}/r${17 + r18}/${setu}]`);
+            })
+            .catch(err => {
+              reply(`图片下载失败，已为你获取图片地址：\n${url}`);
+              bot.logger.error(`${err.message} ${pid}${title}`);
+            })
+
+          lsp.set(user_id, lsp.get(user_id) + 1);
+          break;
+
+        case 401:
+          reply(`${msg} apikey 不存在或被封禁`);
+          break;
+
+        case 403:
+          reply(`${msg} 由于不规范的操作而被拒绝调用`);
+          break;
+
+        case 404:
+          reply(`${msg} 请输入合法的 pixiv tag`);
+          break;
+
+        case 429:
+          reply(`${msg} api 达到调用额度限制`);
+          break;
+
+        default:
+          reply(`statusCode: ${code} ，发生意料之外的问题，请联系 yuki`);
+          break;
+      }
+    })
+    .catch(err => {
+      reply(err.message);
+      bot.logger.error(err);
+    })
+}
+
+key ?
+  reload() :
+  bot.logger.warn(`你没有添加 apikey ，setu 服务将无法使用！`);
+
+module.exports = {
+  random, search
+}

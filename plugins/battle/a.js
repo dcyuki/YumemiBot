@@ -1,9 +1,9 @@
 const axios = require('axios');
 const { getConfig } = require(`${__yumemi}/utils/util`);
 
-class Battle {
-  static addZero = number => number < 10 ? '0' + number : number;
+const addZero = number => number < 10 ? '0' + number : number;
 
+class Battle {
   constructor(ctx) {
     const { group_id, group_name, user_id, raw_message, nickname, card, level } = ctx;
 
@@ -41,10 +41,10 @@ class Battle {
     return new Promise(resolve => {
       const now_date = new Date();
       const year = now_date.getFullYear();
-      const month = Battle.addZero(now_date.getMonth() + 1);
-      const day = Battle.addZero(now_date.getDate());
-      const hour = Battle.addZero(now_date.getHours());
-      const minute = Battle.addZero(now_date.getMinutes());
+      const month = addZero(now_date.getMonth() + 1);
+      const day = addZero(now_date.getDate());
+      const hour = addZero(now_date.getHours());
+      const minute = addZero(now_date.getMinutes());
 
       const time = `${year}/${month}/${day} ${hour}:${minute}`;
       const today = `${year}/${month}/${day} 05`;
