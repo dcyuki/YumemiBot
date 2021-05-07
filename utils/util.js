@@ -1,8 +1,63 @@
 const fs = require('fs');
+const https = require('https');
 const yaml = require('js-yaml');
 const schedule = require('node-schedule');
 
 const config_path = `./config`;
+
+// 发送 https get 请求
+// 不会吧不会吧？都1202年了，不会还有 api 是 http 协议吧？
+const netRequest = {
+  get: async (url, options = { timeout: 5000 }) => {
+    return new Promise((resolve, reject) => {
+      https.get(url, options, res => {
+        let err = null;
+
+        const { statusCode } = res;
+        const contentType = res.headers['content-type'];
+        // bot.logger.mark(`statusCode: ${statusCode}, contentType: ${contentType}, url: ${url}`);
+
+        // 任何 2xx 状态码都表示成功的响应
+        if (Math.floor(statusCode / 100) !== 2) err = new Error(`请求失败，状态码: ${statusCode}`);
+
+        switch (contentType) {
+          case 'image/jpeg':
+          case 'image/png':
+          case 'image/jpg':
+            res.setEncoding('binary');
+            break;
+          default:
+            res.setEncoding('utf8');
+            //   err = new Error(`无效的 content-type ，接收到的是 ${contentType}`);
+            break;
+        }
+
+        if (err) {
+          bot.logger.error(`Error: ${err.message}`);
+          // 释放内存
+          res.resume();
+          return;
+        }
+
+        let rawData = '';
+
+        res.on('data', chunk => { rawData += chunk; });
+        res.on('end', () => {
+          // 若 data 为 json 则转换
+          if (/^application\/json/.test(contentType)) {
+            rawData = JSON.parse(rawData);
+          }
+          resolve(rawData)
+        });
+      }).on('error', err => {
+        reject(err);
+      }).on('timeout', () => {
+        bot.logger.warn(`Timeout: ${url}`);
+        reject(null);
+      });
+    })
+  }
+}
 
 /**
  * async 获取配置文件信息
@@ -164,5 +219,5 @@ const checkGroupConfig = async () => {
 module.exports = {
   getConfig, getConfigSync, setConfig,
   getDir, exists, checkGroupConfig,
-  scheduleJob
+  scheduleJob, netRequest
 }

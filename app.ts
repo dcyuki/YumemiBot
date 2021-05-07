@@ -1,5 +1,5 @@
 import { createClient } from 'oicq';
-import { getConfig, getConfigSync, getDir, exists, updateGroup } from './utils/util';
+import { getConfig, getConfigSync, getDir, exists, checkGroupConfig } from './utils/util';
 
 class Bot {
   private account: number;

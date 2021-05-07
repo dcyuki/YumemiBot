@@ -1,6 +1,6 @@
 const fs = require('fs');
 const axios = require('axios');
-const { getConfig, getConfigSync, getDir, scheduleJob } = require('../../utils/util');
+const { getConfig, getConfigSync, getDir, scheduleJob, netRequest } = require('../../utils/util');
 
 const setu_max = 20;
 const lsp = new Map();
@@ -46,21 +46,35 @@ const reload = async () => {
         for (let j = 0; j < data.length; j++) {
           const { url, pid, title } = data[j];
 
-          axios({
-            method: 'get',
-            url: url,
-            responseType: 'stream'
-          })
+          netRequest.get(url)
             .then(res => {
               // pid 与 title 之间使用 @ 符分割，title 若出现 /\.[]? 则替换为 -
               const setu = `${setu_path}/r${17 + i}/${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`;
 
-              res.data.pipe(fs.createWriteStream(setu));
+              fs.writeFile(setu, res, 'binary', err => {
+                err && console.log(err);
+              })
             })
             .catch(err => {
-              bot.logger.error(`${err.message} ${pid}${title}`);
-              return;
+              reply(`图片流获取失败，但已为你获取图片地址：\n${url}`);
+              bot.logger.error(`${err ? err.message : 'timeout'} ${pid}${title}`);
             })
+
+          // axios({
+          //   method: 'get',
+          //   url: url,
+          //   responseType: 'stream'
+          // })
+          //   .then(res => {
+          //     // pid 与 title 之间使用 @ 符分割，title 若出现 /\.[]? 则替换为 -
+          //     const setu = `${setu_path}/r${17 + i}/${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`;
+
+          //     res.data.pipe(fs.createWriteStream(setu));
+          //   })
+          //   .catch(err => {
+          //     bot.logger.error(`${err.message} ${pid}${title}`);
+          //     return;
+          //   })
         }
       })
       .catch(err => {
@@ -112,9 +126,9 @@ const search = async ctx => {
   const keyword = raw_message.slice(2, raw_message.length - 2);
   const { [group_id]: { plugins: { setu: { r18, flash } } } } = await getConfig('groups');
 
-  axios.get(`${url}?apikey=${key}&r18=${Number(r18)}&keyword=${encodeURI(keyword)}&size1200=true`)
+  netRequest.get(`${url}?apikey=${key}&r18=${Number(r18)}&keyword=${encodeURI(keyword)}&size1200=true`)
     .then(res => {
-      const { code, msg, data } = res.data;
+      const { code, msg, data } = res;
 
       switch (code) {
         case -1:
@@ -129,20 +143,19 @@ const search = async ctx => {
           reply(`[CQ:at,qq=${user_id}]\npid: ${pid}\ntitle: ${title}\n----------------\n图片下载中，请耐心等待喵`);
 
           // 开始下载图片
-          // reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=${url},timeout=10]`);
-
-          axios({
-            method: 'get',
-            url: url,
-            responseType: 'stream'
-          })
+          netRequest.get(url)
             .then(res => {
-              res.data.pipe(fs.createWriteStream(`${setu_path}/r${17 + r18}/${setu}`));
-              reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=${setu_path}/r${17 + r18}/${setu}]`);
+              const img = `${setu_path}/r${17 + r18}/${setu}`
+
+              fs.writeFile(img, res, 'binary', err => {
+                err && console.log(err);
+
+                reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=${img}]`);
+              })
             })
             .catch(err => {
-              reply(`图片下载失败，已为你获取图片地址：\n${url}`);
-              bot.logger.error(`${err.message} ${pid}${title}`);
+              reply(`图片流获取失败，但已为你获取图片地址：\n${url}`);
+              bot.logger.error(`${err ? err.message : 'timeout'} ${pid}${title}`);
             })
 
           lsp.set(user_id, lsp.get(user_id) + 1);
@@ -169,10 +182,69 @@ const search = async ctx => {
           break;
       }
     })
-    .catch(err => {
-      reply(err.message);
-      bot.logger.error(err);
-    })
+
+  // axios.get(`${url}?apikey=${key}&r18=${Number(r18)}&keyword=${encodeURI(keyword)}&size1200=true`)
+  //   .then(async res => {
+  //     const { code, msg, data } = res.data;
+
+  //     switch (code) {
+  //       case -1:
+  //         reply(`${msg} api 炸了`);
+  //         break;
+
+  //       case 0:
+  //         const { url, pid, title } = data[0];
+  //         // pid 与 title 之间使用 @ 符分割，title 若出现 /\.[]? 则替换为 -
+  //         const setu = `${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`;
+
+  //         reply(`[CQ:at,qq=${user_id}]\npid: ${pid}\ntitle: ${title}\n----------------\n图片下载中，请耐心等待喵`);
+
+  //         // 开始下载图片
+  //         reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=${url},timeout=10]`);
+  //         // const img = `${setu_path}/r${17 + r18}/${setu}`;
+
+  //         // await axios({
+  //         //   method: 'get',
+  //         //   url: url,
+  //         //   responseType: 'stream'
+  //         // })
+  //         //   .then(res => {
+  //         //     res.data.pipe(fs.createWriteStream(img));
+  //         //   })
+  //         //   .catch(err => {
+  //         //     reply(`图片下载失败，已为你获取图片地址：\n${url}`);
+  //         //     bot.logger.error(`${err.message} ${pid}${title}`);
+  //         //   })
+
+  //         // reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=${img}]`);
+  //         lsp.set(user_id, lsp.get(user_id) + 1);
+  //         break;
+
+  //       case 401:
+  //         reply(`${msg} apikey 不存在或被封禁`);
+  //         break;
+
+  //       case 403:
+  //         reply(`${msg} 由于不规范的操作而被拒绝调用`);
+  //         break;
+
+  //       case 404:
+  //         reply(`${msg} 请输入合法的 pixiv tag`);
+  //         break;
+
+  //       case 429:
+  //         reply(`${msg} api 达到调用额度限制`);
+  //         break;
+
+  //       default:
+  //         reply(`statusCode: ${code} ，发生意料之外的问题，请联系 yuki`);
+  //         break;
+  //     }
+  //   })
+  //   .catch(err => {
+  //     reply(err.message);
+  //     bot.logger.error(err);
+  //   })
 }
 
 key ?
