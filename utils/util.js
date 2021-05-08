@@ -19,6 +19,8 @@ const netRequest = {
 
         // 任何 2xx 状态码都表示成功的响应
         if (Math.floor(statusCode / 100) !== 2) err = new Error(`请求失败，状态码: ${statusCode}`);
+        
+        bot.logger.debug(`contentType: ${contentType}`);
 
         switch (contentType) {
           case 'image/jpeg':
@@ -127,10 +129,6 @@ const getDir = folder => {
       case 'plugins':
         // dir = fs.readdirSync(`${__yumemi}/plugins`).filter(plugin => /^[a-z]+$/.test(plugin));
         dir = fs.readdirSync(`./plugins`);
-        break;
-
-      case 'buy':
-        dir = fs.readdirSync(`./data/images/buy`);
         break;
 
       case 'setu':

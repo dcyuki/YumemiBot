@@ -46,6 +46,7 @@ class Context {
   }
 }
 
+console.log('※ develop 分支保持着周更甚至日更，除非有特殊需求，否则不建议 clone 本分支!');
 const logo = `--------------------------------------------------------------------------------------------
                                                                              _         
       \\    / _  | |  _  _  ._ _   _    _|_  _    \\_/    ._ _   _  ._ _  o   |_)  _ _|_ 
@@ -115,7 +116,7 @@ bot.on('message.group', async data => {
   const ctx = new Context(message_id, group_id, group_name, raw_message, user_id, nickname, card, level, data.reply)
 
   // chat 始终执行一次
-  // new plugins._tips(ctx).chat();
+  plugins._tips.chat(ctx);
 
   // 正则匹配
   const cmd = await getConfig('cmd');
@@ -142,54 +143,6 @@ bot.on('message.group', async data => {
 
 // 监听群事件
 bot.on('notice.group', async data => {
-
+  // 群事件处理全写在 greet
+  plugins._greet(data);
 });
-
-//     // 监听群消息
-//     bot.on('message.group', async data => {
-//       // 创建 ctx 实例
-//       const { message_id, group_id, group_name, raw_message, sender: { user_id, nickname, card, level: lv, role } } = data;
-//       const level = user_id !== admin ? (user_id !== master ? (role === 'member' ? (lv < 5 ? (lv < 3 ? 0 : 1) : 2) : (role === 'admin' ? 3 : 4)) : 5) : 6;
-//       const ctx = new Context(message_id, group_id, group_name, raw_message, user_id, nickname, card, level, data.reply)
-
-
-//       // 正则匹配
-//       group.enable && getConfig('cmd').then(data => {
-//         const cmd = data;
-
-//         out:
-//         for (const plugin in cmd) {
-//           for (const serve in cmd[plugin]) {
-//             const reg = new RegExp(cmd[plugin][serve]);
-
-//             if (!reg.test(ctx.raw_message)) continue;
-
-//             // 模块是否启用
-//             if (/^[a-z]/.test(plugin)) {
-//               const { plugins: { [plugin]: { enable } } } = group;
-
-//               if (!enable) return bot.sendGroupMsg(ctx.group_id, `当前群聊 ${plugin} 模块未启用...`);
-//             }
-
-//             new plugins[plugin](ctx)[serve]();
-
-//             // chat 始终执行一次
-//             if (serve === 'chat') continue;
-//             break out;
-//           }
-//         }
-//       });
-//     });
-
-//     // 监听群事件
-//     // bot.on('notice.group', async data => {
-//     //   const { group_id } = data;
-//     //   const groups = await getConfig('groups') || {};
-
-//     //   if (!group[group_id].enable) return;
-
-//     // });
-//   })
-//   .catch(err => {
-//     throw err;
-//   })

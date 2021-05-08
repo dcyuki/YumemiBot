@@ -1,5 +1,4 @@
 const fs = require('fs');
-const axios = require('axios');
 const { getConfig, getConfigSync, getDir, scheduleJob, netRequest } = require('../../utils/util');
 
 const setu_max = 20;
@@ -29,17 +28,18 @@ const smallBlackRoom = ctx => {
 
 // 补充涩图
 const reload = async () => {
-  const setu = await getDir('setu');
-  const { r17: { length: r17_length }, r18: { length: r18_length } } = setu;
+  const { r17: { length: r17_length }, r18: { length: r18_length } } = await getDir('setu');;
 
   if (r17_length > setu_max && r18_length > setu_max) return bot.logger.info(`当前本地涩图 r17 有 ${r17_length} 张，r18 有 ${r18_length} 张，数量充足，无需补充`);
 
   for (let i = 0; i < 2; i++) {
     if (eval(`r${17 + i}_length`) > setu_max) continue;
 
-    axios.get(`${url}?apikey=${key}&r18=${i}&num=10&size1200=true`)
+    const setu_url = `${url}?apikey=${key}&r18=${i}&num=10&size1200=true`;
+
+    netRequest.get(setu_url)
       .then(res => {
-        const { data } = res.data;
+        const { data } = res;
 
         bot.logger.mark(`开始补充 r${17 + i} 涩图`);
 
@@ -49,37 +49,19 @@ const reload = async () => {
           netRequest.get(url)
             .then(res => {
               // pid 与 title 之间使用 @ 符分割，title 若出现 /\.[]? 则替换为 -
-              const setu = `${setu_path}/r${17 + i}/${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`;
+              const setu_file = `${setu_path}/r${17 + i}/${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`;
 
-              fs.writeFile(setu, res, 'binary', err => {
-                err && console.log(err);
+              fs.writeFile(setu_file, res, 'binary', err => {
+                !err ? bot.logger.mark(`setu download success , ${pid} ${title}`) : bot.logger.error(`Error: ${err.message}`);
               })
             })
             .catch(err => {
-              reply(`图片流获取失败，但已为你获取图片地址：\n${url}`);
-              bot.logger.error(`${err ? err.message : 'timeout'} ${pid}${title}`);
+              err && bot.logger.error(`Error: ${err.message}`);
             })
-
-          // axios({
-          //   method: 'get',
-          //   url: url,
-          //   responseType: 'stream'
-          // })
-          //   .then(res => {
-          //     // pid 与 title 之间使用 @ 符分割，title 若出现 /\.[]? 则替换为 -
-          //     const setu = `${setu_path}/r${17 + i}/${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`;
-
-          //     res.data.pipe(fs.createWriteStream(setu));
-          //   })
-          //   .catch(err => {
-          //     bot.logger.error(`${err.message} ${pid}${title}`);
-          //     return;
-          //   })
         }
       })
       .catch(err => {
-        bot.logger.error(`获取 r${17 + i} 涩图失败`);
-        bot.logger.error(err.message);
+        err && bot.logger.error(`Error: ${err.message}`);
       });
 
     // 此处只是 http 请求发送完毕，并非全部下载完毕
@@ -123,10 +105,11 @@ const search = async ctx => {
   if (smallBlackRoom(ctx)) return;
 
   const { group_id, user_id, reply, raw_message } = ctx;
-  const keyword = raw_message.slice(2, raw_message.length - 2);
   const { [group_id]: { plugins: { setu: { r18, flash } } } } = await getConfig('groups');
+  const keyword = raw_message.slice(2, raw_message.length - 2);
+  const setu_url = `${url}?apikey=${key}&r18=${Number(r18)}&keyword=${encodeURI(keyword)}&size1200=true`;
 
-  netRequest.get(`${url}?apikey=${key}&r18=${Number(r18)}&keyword=${encodeURI(keyword)}&size1200=true`)
+  netRequest.get(setu_url)
     .then(res => {
       const { code, msg, data } = res;
 
@@ -137,25 +120,21 @@ const search = async ctx => {
 
         case 0:
           const { url, pid, title } = data[0];
-          // pid 与 title 之间使用 @ 符分割，title 若出现 /\.[]? 则替换为 -
-          const setu = `${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`;
 
           reply(`[CQ:at,qq=${user_id}]\npid: ${pid}\ntitle: ${title}\n----------------\n图片下载中，请耐心等待喵`);
 
           // 开始下载图片
           netRequest.get(url)
             .then(res => {
-              const img = `${setu_path}/r${17 + r18}/${setu}`
+              const setu_file = `${setu_path}/r${17 + r18}/${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`;
 
-              fs.writeFile(img, res, 'binary', err => {
-                err && console.log(err);
-
-                reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=${img}]`);
+              fs.writeFile(setu_file, res, 'binary', err => {
+                !err ? reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=${setu_file}]`) : reply(err.message);
               })
             })
             .catch(err => {
-              reply(`图片流获取失败，但已为你获取图片地址：\n${url}`);
-              bot.logger.error(`${err ? err.message : 'timeout'} ${pid}${title}`);
+              reply(`图片流写入失败，但已为你获取图片地址：\n${url}`);
+              err && bot.logger.error(`Error: ${err.message}`);
             })
 
           lsp.set(user_id, lsp.get(user_id) + 1);
@@ -182,75 +161,14 @@ const search = async ctx => {
           break;
       }
     })
-
-  // axios.get(`${url}?apikey=${key}&r18=${Number(r18)}&keyword=${encodeURI(keyword)}&size1200=true`)
-  //   .then(async res => {
-  //     const { code, msg, data } = res.data;
-
-  //     switch (code) {
-  //       case -1:
-  //         reply(`${msg} api 炸了`);
-  //         break;
-
-  //       case 0:
-  //         const { url, pid, title } = data[0];
-  //         // pid 与 title 之间使用 @ 符分割，title 若出现 /\.[]? 则替换为 -
-  //         const setu = `${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`;
-
-  //         reply(`[CQ:at,qq=${user_id}]\npid: ${pid}\ntitle: ${title}\n----------------\n图片下载中，请耐心等待喵`);
-
-  //         // 开始下载图片
-  //         reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=${url},timeout=10]`);
-  //         // const img = `${setu_path}/r${17 + r18}/${setu}`;
-
-  //         // await axios({
-  //         //   method: 'get',
-  //         //   url: url,
-  //         //   responseType: 'stream'
-  //         // })
-  //         //   .then(res => {
-  //         //     res.data.pipe(fs.createWriteStream(img));
-  //         //   })
-  //         //   .catch(err => {
-  //         //     reply(`图片下载失败，已为你获取图片地址：\n${url}`);
-  //         //     bot.logger.error(`${err.message} ${pid}${title}`);
-  //         //   })
-
-  //         // reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=${img}]`);
-  //         lsp.set(user_id, lsp.get(user_id) + 1);
-  //         break;
-
-  //       case 401:
-  //         reply(`${msg} apikey 不存在或被封禁`);
-  //         break;
-
-  //       case 403:
-  //         reply(`${msg} 由于不规范的操作而被拒绝调用`);
-  //         break;
-
-  //       case 404:
-  //         reply(`${msg} 请输入合法的 pixiv tag`);
-  //         break;
-
-  //       case 429:
-  //         reply(`${msg} api 达到调用额度限制`);
-  //         break;
-
-  //       default:
-  //         reply(`statusCode: ${code} ，发生意料之外的问题，请联系 yuki`);
-  //         break;
-  //     }
-  //   })
-  //   .catch(err => {
-  //     reply(err.message);
-  //     bot.logger.error(err);
-  //   })
+    .catch(err => {
+      reply(err.message);
+      err && bot.logger.error(`Error: ${err.message}`);
+    })
 }
 
 key ?
   reload() :
   bot.logger.warn(`你没有添加 apikey ，setu 服务将无法使用！`);
 
-module.exports = {
-  random, search
-}
+module.exports = { random, search }

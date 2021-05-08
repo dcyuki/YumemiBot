@@ -2,10 +2,10 @@ _master:
   title: ^申请头衔[\s]?.+$
 
 _terminal:
-  sugar: ^(开启|启用|打开|关闭|禁用)[\s]?[a-z]+(18)?$
   update: ^>[\s]?update[\s][a-z]+[\s][a-z0-9]+[\s][a-z0-9]+$
   quit: ^>[\s]?quit$
   state: ^>[\s]?state$
+  sugar: ^(开启|启用|打开|关闭|禁用)[\s]?[a-z]+(18)?$
 
 _tips:
   rank: ^(b|bl|国|t|tw|台|省|j|jp|日)服?rank$
@@ -38,7 +38,7 @@ gobang:
   over: ^((结束|中止)对局|认输)$
 
 hitokoto:
-  send: ^来点骚话$
+  send: ^(来|说)(点|句|段)骚话$
 
 saucenao:
   search: ^(搜图|\[CQ:image,file=.+,url=.+\])$
