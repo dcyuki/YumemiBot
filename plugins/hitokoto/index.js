@@ -1,4 +1,4 @@
-const { getConfig, getConfigSync, scheduleJob, netRequest } = require('../../utils/util');
+const { getConfig, getConfigSync, scheduleJob, httpsRequest } = require('../../utils/util');
 
 const { hitokoto: { url, params } } = getConfigSync('api');
 
@@ -22,7 +22,7 @@ scheduleJob('0 0 0 * * ?', async () => {
 
 const get = () => {
   return new Promise((resolve, reject) => {
-    netRequest.get(`${url}${params}`)
+    httpsRequest.get(`${url}${params}`)
       .then(res => {
         const { hitokoto, from } = res;
         const msg = `${hitokoto}\n\t\t\t\t———— 「${from}」`;

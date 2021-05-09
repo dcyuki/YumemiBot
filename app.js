@@ -143,6 +143,12 @@ bot.on('message.group', async data => {
 
 // 监听群事件
 bot.on('notice.group', async data => {
+  // 获取群聊信息
+  const { group_id, group_name } = data;
+  const group = await getConfig('groups').then(data => data[group_id]);
+
+  if (!group.enable) return bot.logger.mark(`群聊 ${group_name} (${group_id}) 未开启服务`);
+  
   // 群事件处理全写在 greet
   plugins._greet(data);
 });

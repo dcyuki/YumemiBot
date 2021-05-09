@@ -2,12 +2,15 @@ const { getConfig, scheduleJob } = require('../../utils/util');
 
 const poke = [
   '喵？',
+  '别摸了！要秃了!',
   '呜...',
   '不可以！',
   'baka！别碰我！',
-  '别摸了！要秃了!',
   '再摸拿剪刀了',
-  `[CQ:image,file=${__yumemi}/data/images/emoji/xxx.jpeg]`,
+  `[CQ:image,file=./data/images/emoji/poke.jpg]`,
+  `[CQ:image,file=./data/images/emoji/poke_hana.jpg]`,
+  `[CQ:image,file=./data/images/emoji/poke_hana.png]`,
+  `[CQ:image,file=./data/images/emoji/heng.jpg]`,
 ]
 
 const word = new Map();

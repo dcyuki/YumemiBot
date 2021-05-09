@@ -1,13 +1,63 @@
 const fs = require('fs');
+const http = require('http');
 const https = require('https');
 const yaml = require('js-yaml');
 const schedule = require('node-schedule');
 
 const config_path = `./config`;
 
+const httpRequest = (url, method, post_data) => {
+  return new Promise((resolve, reject) => {
+    const options = {
+      'method': method,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Length': post_data.length
+    }
+    const req = http.request(url, options, res => {
+      let err = null;
+      const contentType = res.headers['content-type'];
+
+      // 任何 2xx 状态码都表示成功的响应
+      if (Math.floor(res.statusCode / 100) !== 2) err = new Error(`请求失败，状态码: ${res.statusCode}`);
+
+      if (err) {
+        bot.logger.error(`Error: ${err.message}`);
+        // 释放内存
+        res.resume();
+        return;
+      }
+
+      res.setEncoding('utf8');
+
+      let raw_data = '';
+
+      res.on('data', (chunk) => { raw_data += chunk; });
+      res.on('end', () => {
+        // 若 data 为 json 则转换
+        if (/^application\/json/.test(contentType)) {
+          raw_data = JSON.parse(raw_data);
+        }
+
+        resolve(raw_data)
+      });
+    }).on('error', err => {
+      reject(err);
+    }).on('timeout', () => {
+      bot.logger.warn(`Timeout: ${url}`);
+      reject(null);
+    });
+
+    // 将数据写入请求 body
+    req.write(post_data);
+    // 使用 request() 时，必须始终调用 req.end() 来表示请求的结束
+    req.end();
+  })
+}
+
+
 // 发送 https get 请求
 // 不会吧不会吧？都1202年了，不会还有 api 是 http 协议吧？
-const netRequest = {
+const httpsRequest = {
   get: async (url, options = { timeout: 5000 }) => {
     return new Promise((resolve, reject) => {
       https.get(url, options, res => {
@@ -19,7 +69,7 @@ const netRequest = {
 
         // 任何 2xx 状态码都表示成功的响应
         if (Math.floor(statusCode / 100) !== 2) err = new Error(`请求失败，状态码: ${statusCode}`);
-        
+
         bot.logger.debug(`contentType: ${contentType}`);
 
         switch (contentType) {
@@ -217,5 +267,5 @@ const checkGroupConfig = async () => {
 module.exports = {
   getConfig, getConfigSync, setConfig,
   getDir, exists, checkGroupConfig,
-  scheduleJob, netRequest
+  scheduleJob, httpsRequest, httpRequest
 }

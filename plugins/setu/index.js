@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { getConfig, getConfigSync, getDir, scheduleJob, netRequest } = require('../../utils/util');
+const { getConfig, getConfigSync, getDir, scheduleJob, httpsRequest } = require('../../utils/util');
 
 const setu_max = 20;
 const lsp = new Map();
@@ -37,7 +37,7 @@ const reload = async () => {
 
     const setu_url = `${url}?apikey=${key}&r18=${i}&num=10&size1200=true`;
 
-    netRequest.get(setu_url)
+    httpsRequest.get(setu_url)
       .then(res => {
         const { data } = res;
 
@@ -46,7 +46,7 @@ const reload = async () => {
         for (let j = 0; j < data.length; j++) {
           const { url, pid, title } = data[j];
 
-          netRequest.get(url)
+          httpsRequest.get(url)
             .then(res => {
               // pid 与 title 之间使用 @ 符分割，title 若出现 /\.[]? 则替换为 -
               const setu_file = `${setu_path}/r${17 + i}/${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`;
@@ -109,7 +109,7 @@ const search = async ctx => {
   const keyword = raw_message.slice(2, raw_message.length - 2);
   const setu_url = `${url}?apikey=${key}&r18=${Number(r18)}&keyword=${encodeURI(keyword)}&size1200=true`;
 
-  netRequest.get(setu_url)
+  httpsRequest.get(setu_url)
     .then(res => {
       const { code, msg, data } = res;
 
@@ -124,7 +124,7 @@ const search = async ctx => {
           reply(`[CQ:at,qq=${user_id}]\npid: ${pid}\ntitle: ${title}\n----------------\n图片下载中，请耐心等待喵`);
 
           // 开始下载图片
-          netRequest.get(url)
+          httpsRequest.get(url)
             .then(res => {
               const setu_file = `${setu_path}/r${17 + r18}/${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`;
 
