@@ -1,7 +1,6 @@
 const Router = require('koa-router');
 const bodyParser = require('koa-bodyparser');
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database(`${__yumemi}/data/db/yumemi.db`);
+const sqlite = require(`${__yumemi}/utils/sqlite`);
 
 const api = new Router();
 api.use(bodyParser());
@@ -13,38 +12,19 @@ api.post('/test', async ctx => {
 })
 
 api.post('/battle/:action', async ctx => {
-  const { action } = ctx.params;
-  console.log(ctx.request.body);
-  ctx.status = 200;
-  // const { sql, params } = ctx.request.body;
-  // console.log(sql, params)
-  // db.serialize(() => {
-  //   switch (action) {
-  //     case 'get':
-  //       db.get(sql, params, (err, row) => {
-  //         !err ? resolve(row) : reject(err);
-  //       })
-  //       break;
+  const action = new Set(['get', 'all', 'run']);
+  const { sql, params } = ctx.request.body;
 
-  //     case 'all':
-  //       db.all(sql, params, (err, rows) => {
-  //         !err ? resolve(rows) : reject(err);
-  //       })
-  //       break;
-
-  //     case 'run':
-  //       db.run(sql, params, err => {
-  //         !err ? resolve() : reject(err);
-  //       })
-  //       break;
-
-  //     default:
-  //       ctx.status = 404;
-  //       break;
-  //   }
-
-  //   db.close();
-  // });
+  action.has(ctx.params.action) &&
+    await sqlite[ctx.params.action](sql, params)
+      .then(data => {
+        ctx.body = data;
+        ctx.status = 200;
+      })
+      .catch(err => {
+        ctx.body = err;
+        ctx.status = 500;
+      })
 })
 
 api.post('/send/:target', async ctx => {

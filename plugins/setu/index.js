@@ -14,7 +14,10 @@ scheduleJob('0 0 5 * * ?', () => lsp.clear());
 const smallBlackRoom = ctx => {
   const { group_id, user_id, reply } = ctx;
 
-  if (!key) return reply(`你没有添加 apikey ，setu 服务将无法使用！`);
+  if (!key) {
+    reply(`你没有添加 apikey ，setu 服务将无法使用！`);
+    return true;
+  }
 
   // 判断 lsp 要了几张图，超过 lsp_max 张关小黑屋
   !lsp.has(user_id) && lsp.set(user_id, 0);

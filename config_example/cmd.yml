@@ -40,8 +40,8 @@ gobang:
 hitokoto:
   send: ^(来|说)(点|句|段)骚话$
 
-pcrdfans:
-  search: ^(t|tw|台|b|bili|bl|国|j|jp|日)jjc.*
+jjc:
+  pcrdfans: ^(t|tw|台|b|bili|bl|国|j|jp|日)jjc.*
 
 saucenao:
   search: ^(搜图|\[CQ:image,file=.+,url=.+\])$

@@ -6,12 +6,15 @@ const schedule = require('node-schedule');
 
 const config_path = `./config`;
 
-const httpRequest = (url, method, post_data) => {
+const httpRequest = (url, method, post_data = '') => {
   return new Promise((resolve, reject) => {
-    const options = {
-      'method': method,
+    const headers = {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Content-Length': post_data.length
+      'Content-Length': Buffer.byteLength(post_data)
+    }
+    const options = {
+      method,
+      headers
     }
     const req = http.request(url, options, res => {
       let err = null;
