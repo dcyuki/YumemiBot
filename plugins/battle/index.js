@@ -1,9 +1,9 @@
-const { resolve } = require('path');
 const querystring = require('querystring');
 const { getConfig, httpRequest } = require(`../../utils/util`);
 
 const battle_url = `http://localhost/api/battle`;
 const addZero = number => number < 10 ? '0' + number : number;
+const int_char = ['零', '一', '二', '三', '四', '五'];
 
 // 获取当前时间
 const getDate = () => {
@@ -16,7 +16,7 @@ const getDate = () => {
 
   const time = `${year}/${month}/${day} ${hour}:${minute}`;
   const today = `${year}/${month}/${day} 05`;
-  const tomorrow = `${year}/${month}/0${Number(day) + 1} 05`;
+  const tomorrow = `${year}/${month}/${Number(day) + 1} 05`;
   const tomonth = `${year}/${month}`;
   const date = {
     year, month, day, hour, minute, time, today, tomorrow, tomonth,
@@ -27,18 +27,11 @@ const getDate = () => {
 
 // 获取当前 boss 的 max 血量
 const getAllBlood = async (version, syuume) => {
-  return new Promise((resolve, reject) => {
-    getConfig('boss')
-      .then(data => {
-        const stage = syuume <= 3 ? 1 : (syuume <= 10 ? 2 : syuume <= 34 ? 3 : 4);
+  const boss = await getConfig('boss');
+  const stage = syuume <= 3 ? 1 : (syuume <= 10 ? 2 : syuume <= 34 ? 3 : 4);
 
-        // 国服没有 4 阶段，数组下标 -1
-        resolve(data[version][version === 'bl' && stage > 3 ? stage - 2 : stage - 1]);
-      })
-      .catch(err => {
-        reject(err);
-      })
-  })
+  // 国服没有 4 阶段，数组下标 -1
+  return boss[version][version === 'bl' && stage > 3 ? stage - 2 : stage - 1];
 }
 
 // 获取当月会战数据
@@ -47,7 +40,7 @@ const getBattle = ctx => {
     const { group_id } = ctx;
     const { tomonth } = getDate();
 
-    const sql = `SELECT title, syuume, boss_info, update_time FROM battle WHERE group_id = ? AND update_time like ?`;
+    const sql = `SELECT battle_id, title, syuume, boss_info, update_time FROM battle WHERE group_id = ? AND update_time like ?`;
     const params = [group_id, `${tomonth}%`]
     const post_data = querystring.stringify({ sql, params });
 
@@ -71,23 +64,24 @@ const initGuild = ctx => {
 }
 
 // 校验数据
-const checkBattle = ctx => {
-  return new Promise(async resolve => {
-    const { group_id } = ctx;
-    // 是否设置公会
-    const { [group_id]: { plugins: { battle: { version } } } } = await getConfig('groups');
-    // 当月是否开启会战
-    const battle = await getBattle(ctx);
+const checkBattle = async ctx => {
+  const { group_id } = ctx;
+  // 是否设置公会
+  const { [group_id]: { plugins: { battle: { version } } } } = await getConfig('groups');
+  // 当月是否开启会战
+  const battle = await getBattle(ctx);
 
-    resolve({ version, battle })
-  })
+  return { version, battle }
 }
 
 // 开启会战
 const insertBattle = async ctx => {
+  await insertUser(ctx);
+  await insertGuild(ctx);
+  await insertMember(ctx);
+
   const { reply } = ctx;
   const { version, battle } = await checkBattle(ctx);
-
   if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
   if (battle) return reply('当月已开启会战，请勿重提提交');
 
@@ -98,7 +92,7 @@ const insertBattle = async ctx => {
   // 获取 boss 血量
   const all_blood = await getAllBlood(version, 1);
   // 节省性能，5个固定 boss 没必要循环遍历
-  const boss_info = `
+  const boss_info = `******  ${version === 'tw' ? '台' : (version === 'jp' ? '日' : '国')}服 ${title} 会战  ******\n
   一王：${all_blood[0]} \\ ${all_blood[0]}
   讨伐：暂无
 
@@ -113,8 +107,7 @@ const insertBattle = async ctx => {
 
   五王：${all_blood[4]} \\ ${all_blood[4]}
   讨伐：暂无
-
-*******************************`;
+\n*******************************`;
 
   const sql = "INSERT INTO battle (group_id, title, boss_info, update_time) VALUES (?, ?, ?, ?)";
   const params = [group_id, title, boss_info, time];
@@ -123,8 +116,7 @@ const insertBattle = async ctx => {
 
   httpRequest(`${battle_url}/run`, 'POST', post_data)
     .then(() => {
-      reply(`******  ${version === 'tw' ? '台' : (version === 'jp' ? '日' : '国')}服 ${title} 会战  ******
-${boss_info}
+      reply(`${boss_info}
 会战信息：1 周目 1 阶段
 当前出刀：0 / 90
 更新时间：${time}`)
@@ -160,17 +152,17 @@ const deleteBattle = async ctx => {
 
 // 当前状态
 const selectBattle = async ctx => {
+  const { reply } = ctx;
   const { version, battle } = await checkBattle(ctx);
 
   if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
   if (!battle) return reply('当月未发起会战，请先初始化数据');
 
-  const { reply } = ctx;
+  // 获取预约成员
   // const member = [];
   // const reservation = this.getReservation();
-  const { title, syuume, boss_info, update_time } = battle;
-  reply(`******  ${version === 'tw' ? '台' : (version === 'jp' ? '日' : '国')}服 ${title} 会战  ******
-${boss_info}
+  const { syuume, boss_info, update_time } = battle;
+  reply(`${boss_info}
 会战信息：${syuume} 周目 ${syuume <= 3 ? 1 : (syuume <= 10 ? 2 : syuume <= 34 ? 3 : 4)} 阶段
 当前出刀：0 / 90
 更新时间：${update_time}`)
@@ -181,4 +173,216 @@ ${boss_info}
   // bot.sendGroupMsg(this.group_id, `${title} 会战:\n\t${syuume} 周目 ${boss} 王  ${blood} \\ ${maxBlood}\n当前讨伐成员: \n\t${member.length ? member : '暂无'}\n数据更新时间:\n\t${start_time}`);
 }
 
-module.exports = { initGuild, insertBattle, deleteBattle, selectBattle };
+// 报刀
+const insertFight = async ctx => {
+  const { reply } = ctx;
+  const { version, battle } = await checkBattle(ctx);
+
+  if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
+  if (!battle) return reply('当月未发起会战，请先初始化数据');
+
+  const { group_id, user_id } = ctx;
+  const { today, tomorrow } = getDate();
+
+  // 当天是否已出刀
+  /**
+   * node-sqlite3 目前不支持正则，这样性能应该会更高一些
+   * SELECT * FROM fight_view WHERE group_id = ? AND user_id = ? AND fight_time REGEXP '${year}/${month}/(${day}\s[0-2]\d|${day+1}\s0[0-4])' ORDER BY fight_time DESC
+   */
+  const sql = "SELECT * FROM fight_view WHERE group_id = ? AND user_id = ? AND fight_time BETWEEN ? AND ? ORDER BY number DESC, fight_time DESC";
+  const params = [group_id, user_id, today, tomorrow];
+  const post_data = querystring.stringify({ sql, params });
+
+  httpRequest(`${battle_url}/get`, 'POST', post_data)
+    .then(res => {
+      const { user_id, raw_message, reply } = ctx;
+      let { number = 0 } = res;
+
+      if (number === 3) {
+        reply(`[CQ:at,qq=${user_id}] 你今天已经出完3刀了，请不要重复提交数据`);
+        return;
+      }
+
+      let boss = Number(raw_message.match(/\d\s?(?=(报刀|尾刀))/g));
+      const { boss_info } = battle;
+      const damage = Number(raw_message.match(/(?<=报刀).*/g));
+      const all_blood = boss_info.match(/(?<=(一|二|三|四|五)王：).*(?=\s\\)/g).map(Number);
+
+      // 未指定 boss 则选取存活的第一个 boss
+      if (!boss) {
+        const { length } = all_blood;
+
+        for (let i = 0; i < length; i++) {
+          if (all_blood[i] > 0) {
+            boss = i + 1;
+            break;
+          }
+        }
+      }
+
+      // boss 血量为空
+      if (!all_blood[boss - 1]) {
+        reply(`[CQ:at,qq=${user_id}] ${int_char[boss]}王 都没了，你报啥呢？`);
+        return;
+      }
+
+      // 伤害溢出
+      if (damage && damage >= all_blood[boss - 1]) {
+        reply(`伤害值超出 boss 剩余血量，若以斩杀 boss 请使用「尾刀」指令`);
+        return;
+      }
+
+      number = damage ? parseInt(number) + 1 : number + 0.5;
+
+      const { nickname, card } = ctx;
+      const { time } = getDate();
+      const { battle_id, syuume } = battle;
+      const note = `${card ? card : nickname} 对 ${int_char[boss]}王 造成了 ${damage ? `${damage} 点伤害` : `${all_blood[boss - 1]} 点伤害并击破`}`;
+
+      const sql = "INSERT INTO fight (battle_id, group_id, user_id, number, syuume, boss, damage, note, fight_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      const params = [battle_id, group_id, user_id, number, syuume, boss, damage ? damage : all_blood[boss - 1], note, time];
+      const post_data = querystring.stringify({ sql, params });
+
+      httpRequest(`${battle_url}/run`, 'POST', post_data)
+        .then(() => {
+          reply(note);
+          // 更新 battle
+          updateBattle(
+            ctx,
+            damage ? syuume : (boss < 5 ? syuume + 1 : 1),
+            boss_info.replace(
+              `${int_char[boss]}王：${all_blood[boss - 1]}`,
+              `${int_char[boss]}王：${damage ? all_blood[boss - 1] - damage : 0}`
+            )
+          )
+        })
+        .catch(err => {
+          bot.logger.error(err);
+        })
+    })
+    .catch(err => {
+      bot.logger.error(err);
+    })
+}
+
+// 更新 battle
+const updateBattle = (ctx, syuume, boss_info) => {
+  const { group_id, reply } = ctx;
+  const { time, tomonth } = getDate();
+
+  const sql = "UPDATE battle SET syuume = ?, boss_info = ?, update_time = ? WHERE group_id = ? AND update_time like ?";
+  const params = [syuume, boss_info, time, group_id, `${tomonth}%`]
+  const post_data = querystring.stringify({ sql, params });
+
+  httpRequest(`${battle_url}/run`, 'POST', post_data)
+    .then(() => {
+      reply(boss_info);
+    })
+    .catch(err => {
+      bot.logger.error(err);
+    })
+}
+
+// 创建账号
+const insertUser = ctx => {
+  const { user_id } = ctx;
+  // 查询账号是否存在
+  const sql = "SELECT user_id FROM user WHERE user_id = ?";
+  const params = [user_id];
+  const post_data = querystring.stringify({ sql, params });
+
+  httpRequest(`${battle_url}/get`, 'POST', post_data)
+    .then(res => {
+      if (res) return
+
+      // 账号不存在则写入数据
+      let password = '';
+      const { nickname, card } = ctx;
+      const { time } = getDate();
+
+      // 生成随机密码，小写字母 'a' 的 ASCII 是 97 , a-z 的 ASCII 码就是 97 + 0 ~ 25;
+      for (let i = 0; i <= 5; i++) password += (String.fromCharCode(97 + Math.floor(Math.random() * 26)));
+
+      const sql = `INSERT INTO user (user_id, nickname, password, record_time) VALUES (?, ?, ?, ?)`;
+      const params = [user_id, card ? card : nickname, password, time];
+      const post_data = querystring.stringify({ sql, params });
+
+      httpRequest(`${battle_url}/run`, 'POST', post_data)
+        .then(() => {
+          bot.logger.info(`INSERT user success: ${user_id}`);
+          bot.sendPrivateMsg(user_id, `你的账号已自动创建，初始密码为：${password}\n可登录后台自行修改，若遗忘发送「初始化密码」重置`);
+        })
+        .catch(err => {
+          bot.logger.error(err);
+        })
+    })
+    .catch(err => {
+      bot.logger.error(err);
+    })
+}
+
+// 录入群聊信息
+const insertGuild = ctx => {
+  const { group_id } = ctx;
+
+  // 查询是否已存在
+  const sql = `SELECT * FROM guild WHERE group_id = ?`;
+  const params = [group_id];
+  const post_data = querystring.stringify({ sql, params });
+
+  httpRequest(`${battle_url}/get`, 'POST', post_data)
+    .then(res => {
+      if (res) return
+
+      // 成员不存在则写入数据
+      const { group_name, user_id } = ctx;
+      const { time } = getDate();
+
+      const sql = `INSERT INTO guild (group_id, name, create_time) VALUES (?, ?, ?)`;
+      const params = [group_id, group_name, time];
+      const post_data = querystring.stringify({ sql, params });
+
+      httpRequest(`${battle_url}/run`, 'POST', post_data)
+        .then(() => {
+          bot.logger.info(`INSERT guild success: ${user_id}`)
+        })
+        .catch(err => {
+          bot.logger.error(err);
+        })
+    })
+    .catch(err => {
+      bot.logger.error(err);
+    })
+}
+
+// 录入成员信息
+const insertMember = ctx => {
+  const { group_id, user_id } = ctx;
+  // 查询成员是否已存在
+  const sql = `SELECT * FROM member WHERE group_id = ? AND user_id = ?`;
+  const params = [group_id, user_id];
+  const post_data = querystring.stringify({ sql, params });
+
+  httpRequest(`${battle_url}/get`, 'POST', post_data)
+    .then(res => {
+      if (res) return
+
+      // 成员不存在则写入数据
+      const sql = `INSERT INTO member (group_id, user_id) VALUES (?, ?)`;
+      const params = [group_id, user_id];
+      const post_data = querystring.stringify({ sql, params });
+
+      httpRequest(`${battle_url}/run`, 'POST', post_data)
+        .then(() => {
+          bot.logger.info(`INSERT member success: ${user_id}`)
+        })
+        .catch(err => {
+          bot.logger.error(err);
+        })
+    })
+    .catch(err => {
+      bot.logger.error(err);
+    })
+}
+
+module.exports = { initGuild, insertBattle, deleteBattle, selectBattle, insertFight };
