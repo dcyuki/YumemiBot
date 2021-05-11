@@ -54,7 +54,7 @@ const reload = async () => {
               // pid 与 title 之间使用 @ 符分割，title 若出现 /\.[]? 则替换为 -
               const setu_file = `${setu_path}/r${17 + i}/${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`;
 
-              fs.writeFile(setu_file, res, 'binary', err => {
+              fs.writeFile(setu_file, res, 'base64', err => {
                 !err ? bot.logger.mark(`setu download success , ${pid} ${title}`) : bot.logger.error(`Error: ${err.message}`);
               })
             })
@@ -129,14 +129,10 @@ const search = async ctx => {
           // 开始下载图片
           httpsRequest.get(url)
             .then(res => {
-              const setu_file = `${setu_path}/r${17 + r18}/${pid}@${title.replace(/(\/|\\|\.|\[|\]|\?)/g, '-')}${url.slice(-4)}`;
-
-              fs.writeFile(setu_file, res, 'binary', err => {
-                !err ? reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=${setu_file}]`) : reply(err.message);
-              })
+              reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=base64://${res}]`)
             })
             .catch(err => {
-              reply(`图片流写入失败，但已为你获取图片地址：\n${url}`);
+              reply(`图片流写入失败，但已为你获取到图片地址：\n${url}`);
               err && bot.logger.error(`Error: ${err.message}`);
             })
 

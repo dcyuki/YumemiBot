@@ -79,7 +79,7 @@ const httpsRequest = {
           case 'image/jpeg':
           case 'image/png':
           case 'image/jpg':
-            res.setEncoding('binary');
+            res.setEncoding('base64');
             break;
           default:
             res.setEncoding('utf8');
@@ -102,6 +102,7 @@ const httpsRequest = {
           if (/^application\/json/.test(contentType)) {
             rawData = JSON.parse(rawData);
           }
+
           resolve(rawData)
         });
       }).on('error', err => {
