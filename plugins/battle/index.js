@@ -26,7 +26,7 @@ const getDate = () => {
 }
 
 // 获取当前 boss 的 max 血量
-const getAllBlood = async (version, syuume) => {
+const getMaxBlood = async (version, syuume) => {
   const boss = await getConfig('boss');
   const stage = syuume <= 3 ? 1 : (syuume <= 10 ? 2 : syuume <= 34 ? 3 : 4);
 
@@ -38,10 +38,10 @@ const getAllBlood = async (version, syuume) => {
 const getBattle = ctx => {
   return new Promise((resolve, reject) => {
     const { group_id } = ctx;
-    const { tomonth } = getDate();
+    const { today, tomorrow, tomonth } = getDate();
 
-    const sql = `SELECT battle_id, title, syuume, boss_info, update_time FROM battle WHERE group_id = ? AND update_time like ?`;
-    const params = [group_id, `${tomonth}%`]
+    const sql = `SELECT battle_id, title, battle.syuume, info, update_time, count(*) AS length FROM battle LEFT JOIN fight_view ON battle.group_id = fight_view.group_id AND fight_time BETWEEN ? AND ? WHERE battle.group_id = ? AND update_time like ?`;
+    const params = [today, tomorrow, group_id, `${tomonth}%`]
     const post_data = querystring.stringify({ sql, params });
 
     httpRequest(`${battle_url}/get`, 'POST', post_data)
@@ -90,36 +90,42 @@ const insertBattle = async ctx => {
   // 当期星座
   const title = raw_message.slice(2, 5);
   // 获取 boss 血量
-  const all_blood = await getAllBlood(version, 1);
+  const max_blood = await getMaxBlood(version, 1);
   // 节省性能，5个固定 boss 没必要循环遍历
-  const boss_info = `******  ${version === 'tw' ? '台' : (version === 'jp' ? '日' : '国')}服 ${title} 会战  ******\n
-  一王：${all_blood[0]} \\ ${all_blood[0]}
-  讨伐：暂无
+  const info = `{
+    "boss": [
+      "${max_blood[0]} / ${max_blood[0]}",
+      "${max_blood[1]} / ${max_blood[1]}",
+      "${max_blood[2]} / ${max_blood[2]}",
+      "${max_blood[3]} / ${max_blood[3]}",
+      "${max_blood[4]} / ${max_blood[4]}"
+    ],
+    "crusade": [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  }`;
 
-  二王：${all_blood[1]} \\ ${all_blood[1]}
-  讨伐：暂无
-
-  三王：${all_blood[2]} \\ ${all_blood[2]}
-  讨伐：暂无
-
-  四王：${all_blood[3]} \\ ${all_blood[3]}
-  讨伐：暂无
-
-  五王：${all_blood[4]} \\ ${all_blood[4]}
-  讨伐：暂无
-\n*******************************`;
-
-  const sql = "INSERT INTO battle (group_id, title, boss_info, update_time) VALUES (?, ?, ?, ?)";
-  const params = [group_id, title, boss_info, time];
+  const sql = "INSERT INTO battle (group_id, title, info, update_time) VALUES (?, ?, ?, ?)";
+  const params = [group_id, title, info, time];
 
   const post_data = querystring.stringify({ sql, params });
 
   httpRequest(`${battle_url}/run`, 'POST', post_data)
     .then(() => {
-      reply(`${boss_info}
-会战信息：1 周目 1 阶段
-当前出刀：0 / 90
-更新时间：${time}`)
+      const info_json = JSON.parse(info)
+      let msg = `******  ${version === 'tw' ? '台' : (version === 'jp' ? '日' : '国')}服 ${title} 会战  ******\n`;
+
+      for (let i = 0; i < 5; i++) {
+        msg += `\n\t${int_char[i + 1]}王：${info_json.boss[i]}\n\t讨伐：暂无\n`;
+      }
+
+      msg += `\n*******************************\n会战信息：1 周目 1 阶段\n当前出刀：0 / 90\n更新时间：${time}`;
+
+      reply(msg)
     })
     .catch(err => {
       bot.logger.error(err);
@@ -158,19 +164,29 @@ const selectBattle = async ctx => {
   if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
   if (!battle) return reply('当月未发起会战，请先初始化数据');
 
-  // 获取预约成员
-  // const member = [];
-  // const reservation = this.getReservation();
-  const { syuume, boss_info, update_time } = battle;
-  reply(`${boss_info}
-会战信息：${syuume} 周目 ${syuume <= 3 ? 1 : (syuume <= 10 ? 2 : syuume <= 34 ? 3 : 4)} 阶段
-当前出刀：0 / 90
-更新时间：${update_time}`)
-  // for (let i = 0; i < reservation[this.group_id][boss].length; i++) {
-  //   member.push(`${reservation[this.group_id][boss][i].split('@')[1]}`)
-  // }
-  // const maxBlood = this.getBlood(syuume, boss);
-  // bot.sendGroupMsg(this.group_id, `${title} 会战:\n\t${syuume} 周目 ${boss} 王  ${blood} \\ ${maxBlood}\n当前讨伐成员: \n\t${member.length ? member : '暂无'}\n数据更新时间:\n\t${start_time}`);
+  const { title, syuume, info, update_time, length } = battle;
+  const info_json = JSON.parse(info)
+
+  let msg = `******  ${version === 'tw' ? '台' : (version === 'jp' ? '日' : '国')}服 ${title} 会战  ******\n`;
+
+  for (let i = 0; i < 5; i++) {
+    const title = [];
+
+    info_json.boss[i].slice(0, 1) !== '0' ?
+      (
+        title[0] = `${int_char[i + 1]}王：`,
+        title[1] = `讨伐：`
+      ) :
+      (
+        title[0] = `扑街：`,
+        title[1] = `预约：`)
+      ;
+    msg += `\n\t${title[0]}${info_json.boss[i]}\n\t${title[1]} ${info_json.crusade[i] ? info_json.crusade[i].match(/\D+/g).join(', ') : '暂无'}\n`;
+  }
+
+  msg += `\n*******************************\n会战信息：${syuume} 周目 ${syuume <= 3 ? 1 : (syuume <= 10 ? 2 : syuume <= 34 ? 3 : 4)} 阶段\n当前出刀：${length} / 90\n更新时间：${update_time}`;
+
+  reply(msg);
 }
 
 // 报刀
@@ -204,9 +220,9 @@ const insertFight = async ctx => {
       }
 
       let boss = Number(raw_message.match(/\d\s?(?=(报刀|尾刀))/g));
-      const { boss_info } = battle;
+      const { info } = battle;
       const damage = Number(raw_message.match(/(?<=报刀).*/g));
-      const all_blood = boss_info.match(/(?<=(一|二|三|四|五)王：).*(?=\s\\)/g).map(Number);
+      const all_blood = info.match(/\d+(?=\s)/g).map(Number);
 
       // 未指定 boss 则选取存活的第一个 boss
       if (!boss) {
@@ -244,17 +260,42 @@ const insertFight = async ctx => {
       const post_data = querystring.stringify({ sql, params });
 
       httpRequest(`${battle_url}/run`, 'POST', post_data)
-        .then(() => {
-          reply(note);
+        .then(async () => {
+          let next = 0;
+
+          const info_json = JSON.parse(info)
+
+          // 更新周目
+          for (let i = 0; i < 5; i++) all_blood[i] === 0 && next++;
+
+          // 如果数组出现4次0而且是尾刀则进入下一周目
+          if (next === 4 && !damage) {
+            // 获取 max 血量
+            const max_blood = await getMaxBlood(version, syuume + 1);
+
+            info_json.boss = [
+              `${max_blood[0]} / ${max_blood[0]}`,
+              `${max_blood[1]} / ${max_blood[1]}`,
+              `${max_blood[2]} / ${max_blood[2]}`,
+              `${max_blood[3]} / ${max_blood[3]}`,
+              `${max_blood[4]} / ${max_blood[4]}`
+            ];
+            next++;
+          } else {
+            // 更新 boss 血量
+            info_json.boss[boss - 1] = info_json.boss[boss - 1].replace(
+              /\d+(?=\s\/)/,
+              `${damage ? `${all_blood[boss - 1] - damage}` : `0`}`
+            );
+          }
+
+          reply(`${note}${next < 5 ? '' : `\n所有 boss 已被斩杀，现在开始 ${syuume + 1} 周目`}`);
+
+          // 清空讨伐数据
+          info_json.crusade[boss - 1] = damage ? info_json.crusade[boss - 1].replace(`${card ? card : nickname}${user_id}`, '') : '';
+
           // 更新 battle
-          updateBattle(
-            ctx,
-            damage ? syuume : (boss < 5 ? syuume + 1 : 1),
-            boss_info.replace(
-              `${int_char[boss]}王：${all_blood[boss - 1]}`,
-              `${int_char[boss]}王：${damage ? all_blood[boss - 1] - damage : 0}`
-            )
-          )
+          updateBattle(ctx, next < 5 ? syuume : syuume + 1, JSON.stringify(info_json));
         })
         .catch(err => {
           bot.logger.error(err);
@@ -265,18 +306,67 @@ const insertFight = async ctx => {
     })
 }
 
+// 预约
+const reservation = async ctx => {
+  const { reply } = ctx;
+  const { version, battle } = await checkBattle(ctx);
+
+  if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
+  if (!battle) return reply('当月未发起会战，请先初始化数据');
+
+  const { info } = battle;
+  const { group_id, raw_message, user_id, nickname, card } = ctx;
+
+  const info_json = JSON.parse(info);
+  const boss = raw_message.slice(2).trim();
+
+  // boss 传入实参则插入预约信息
+  if (boss) {
+    if (info_json.crusade[boss - 1].indexOf(`${card ? card : nickname}`) !== -1) {
+      reply(`[CQ:at,qq=${user_id}] 你已预约 ${int_char[boss]}王，请勿重复预约`);
+      return;
+    }
+
+    const { time, tomonth } = getDate();
+    info_json.crusade[boss - 1] += `${card ? card : nickname}${user_id}`;
+
+    const sql = "UPDATE battle SET info = ?, update_time = ? WHERE group_id = ? AND update_time like ?";
+    const params = [JSON.stringify(info_json), time, group_id, `${tomonth}%`]
+    const post_data = querystring.stringify({ sql, params });
+
+    httpRequest(`${battle_url}/run`, 'POST', post_data)
+      .then(() => {
+        reply(`[CQ:at,qq=${user_id}] 预约 ${int_char[boss]}王 成功`);
+      })
+      .catch(err => {
+        reply(err.message);
+        bot.logger.error(err);
+      })
+  }
+
+  // 不传入 boss 实参则发送预约信息
+  let msg = '**********  预约信息  **********\n';
+
+  for (let i = 0; i < 5; i++) {
+    msg += `\n\t${int_char[i + 1]}王：${info_json.crusade[i] ? info_json.crusade[i].match(/\D+/g).join(', ') : '暂无'}\n`;
+  }
+
+  msg += `\n*******************************`;
+  reply(msg);
+}
+
 // 更新 battle
-const updateBattle = (ctx, syuume, boss_info) => {
-  const { group_id, reply } = ctx;
+const updateBattle = (ctx, syuume, info) => {
+  const { group_id } = ctx;
   const { time, tomonth } = getDate();
 
-  const sql = "UPDATE battle SET syuume = ?, boss_info = ?, update_time = ? WHERE group_id = ? AND update_time like ?";
-  const params = [syuume, boss_info, time, group_id, `${tomonth}%`]
+  const sql = "UPDATE battle SET syuume = ?, info = ?, update_time = ? WHERE group_id = ? AND update_time like ?";
+  const params = [syuume, info, time, group_id, `${tomonth}%`]
   const post_data = querystring.stringify({ sql, params });
 
   httpRequest(`${battle_url}/run`, 'POST', post_data)
     .then(() => {
-      reply(boss_info);
+      selectBattle(ctx);
     })
     .catch(err => {
       bot.logger.error(err);
@@ -385,4 +475,4 @@ const insertMember = ctx => {
     })
 }
 
-module.exports = { initGuild, insertBattle, deleteBattle, selectBattle, insertFight };
+module.exports = { initGuild, insertBattle, deleteBattle, selectBattle, insertFight, reservation };

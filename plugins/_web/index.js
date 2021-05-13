@@ -7,7 +7,7 @@ const router = require('./router');
 
 app.use(async (ctx, next) => {
   await next();
-  console.log(`Process ${ctx.request.method} ${ctx.request.url}`);
+  bot.logger.debug(`Process ${ctx.request.method} ${ctx.request.url}`);
   ctx.status === 404 && ctx.redirect('/error');
 })
 

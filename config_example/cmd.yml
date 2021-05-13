@@ -17,8 +17,8 @@ _tips:
 
 battle:
   initGuild: ^设置(国|台|日)服公会$
-  insertBattle: ^开启[\S][\S]座会战$
-  insertFight: (^报刀[\s]?[0-9]+$|^尾刀$)
+  insertBattle: ^开启\S\S座会战$
+  insertFight: (^[1-5]?\s?报刀\s?[1-9]\d*$|^[1-5]?\s?尾刀$)
   deleteBattle: ^中止会战$
   updateFight: ^修改[\s][0-3](\.5)?[\s][1-9]+\d?$
   reservation: ^预约[\s]?[1-5]?$

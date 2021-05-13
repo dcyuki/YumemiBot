@@ -1,5 +1,5 @@
 const { createClient } = require('oicq');
-const { getConfig, getConfigSync, getDir, exists, checkGroupConfig } = require('./utils/util');
+const { getConfig, getConfigSync, setConfig, getDir, exists, checkGroupConfig } = require('./utils/util');
 
 class Bot {
   constructor(account, password, config) {
@@ -89,7 +89,7 @@ bot.on('system.online', () => {
           })
           .catch(err => {
             bot.logger.warn(`${plugin} 模块未加载`);
-            bot.logger.warn(`${err.message}`);
+            // bot.logger.warn(`${err.message}`);
             j++;
           })
       }
@@ -105,15 +105,34 @@ bot.on('system.online', () => {
 // 监听群消息
 bot.on('message.group', async data => {
   // 获取群聊信息
-  const { group_id, group_name } = data;
-  const group = await getConfig('groups').then(data => data[group_id]);
+  const { group_id, group_name, raw_message, sender: { user_id, level: lv, role }, reply } = data;
 
-  if (!group.enable) return bot.logger.mark(`群聊 ${group_name} (${group_id}) 未开启服务`);
+  const groups = await getConfig('groups');
+  const group = groups[group_id] || {};
+  const level = user_id !== admin ? (user_id !== master ? (role === 'member' ? (lv < 5 ? (lv < 3 ? 0 : 1) : 2) : (role === 'admin' ? 3 : 4)) : 5) : 6;
+
+  // 群消息是否监听
+  if (!group.enable) {
+    checkGroupConfig();
+
+    if (level > 4 && /^(开启|打开|启用)群服务$/.test(raw_message)) {
+      // 如果是 bot 登录后加入的新群，且从没收到除 开启群服务 以外的消息，这里第一次会抛一个 undefined ，不影响程序运行，待优化
+      groups[group_id].enable = true;
+
+      setConfig('groups', groups);
+      reply(`当前群聊已成功开启服务 ♪`)
+    } else if (/^(开启|打开|启用)群服务$/.test(raw_message)) {
+      reply(`你当前为 Level ${level}，开启群服务需要达到 Level 5`)
+    } else {
+      bot.logger.mark(`群聊 ${group_name} (${group_id}) 未开启服务`);
+    }
+
+    return;
+  }
 
   // 创建 ctx 实例
-  const { message_id, raw_message, sender: { user_id, nickname, card, level: lv, role } } = data;
-  const level = user_id !== admin ? (user_id !== master ? (role === 'member' ? (lv < 5 ? (lv < 3 ? 0 : 1) : 2) : (role === 'admin' ? 3 : 4)) : 5) : 6;
-  const ctx = new Context(message_id, group_id, group_name, raw_message, user_id, nickname, card, level, data.reply)
+  const { message_id, sender: { nickname, card } } = data;
+  const ctx = new Context(message_id, group_id, group_name, raw_message, user_id, nickname, card, level, reply)
 
   // chat 始终执行一次
   plugins._tips.chat(ctx);
@@ -132,7 +151,7 @@ bot.on('message.group', async data => {
       if (/^[a-z]/.test(plugin)) {
         const { plugins: { [plugin]: { enable } } } = group;
 
-        if (!enable) return bot.sendGroupMsg(ctx.group_id, `当前群聊 ${plugin} 模块未启用...`);
+        if (!enable) return reply(`当前群聊 ${plugin} 模块未启用...`);
       }
 
       plugins[plugin][serve](ctx);
@@ -148,7 +167,7 @@ bot.on('notice.group', async data => {
   const group = await getConfig('groups').then(data => data[group_id]);
 
   if (!group.enable) return bot.logger.mark(`群聊 ${group_name} (${group_id}) 未开启服务`);
-  
+
   // 群事件处理全写在 greet
   plugins._greet(data);
 });

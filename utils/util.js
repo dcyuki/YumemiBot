@@ -59,7 +59,7 @@ const httpRequest = (url, method, post_data = '') => {
 
 
 // 发送 https get 请求
-// 不会吧不会吧？都1202年了，不会还有 api 是 http 协议吧？
+// 这个方法近期会重写
 const httpsRequest = {
   get: async (url, options = { timeout: 5000 }) => {
     return new Promise((resolve, reject) => {
@@ -73,7 +73,7 @@ const httpsRequest = {
         // 任何 2xx 状态码都表示成功的响应
         if (Math.floor(statusCode / 100) !== 2) err = new Error(`请求失败，状态码: ${statusCode}`);
 
-        bot.logger.debug(`contentType: ${contentType}`);
+        // bot.logger.debug(`contentType: ${contentType}`);
 
         switch (contentType) {
           case 'image/jpeg':

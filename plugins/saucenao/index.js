@@ -20,7 +20,7 @@ const search = ctx => {
   const { user_id, raw_message, reply } = ctx;
 
   if (raw_message === '搜图' && !key) {
-    reply(`你没有添加 apikey !`);
+    reply(`你没有添加 apikey ，saucenao 服务将无法使用`);
     return;
   }
 

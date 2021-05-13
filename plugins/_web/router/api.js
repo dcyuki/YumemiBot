@@ -6,7 +6,6 @@ const api = new Router();
 api.use(bodyParser());
 
 api.post('/test', async ctx => {
-  console.log(ctx.request.body)
   ctx.body = 'this is a test...'
   ctx.status = 200;
 })
@@ -51,16 +50,16 @@ api.post('/send/:target', async ctx => {
     case 'private':
       fl.has(user_id) ?
         (
-          bot.sendPrivateMsg(user_id, msg),
-          ctx.status = 200
+          ctx.status = 200,
+          bot.sendPrivateMsg(user_id, msg)
         ) :
         ctx.status = 403
       break;
     case 'group':
       gl.has(group_id) ?
         (
-          bot.sendGroupMsg(group_id, msg),
-          ctx.status = 200
+          ctx.status = 200,
+          bot.sendGroupMsg(group_id, msg)
         ) :
         ctx.status = 403
       break;
