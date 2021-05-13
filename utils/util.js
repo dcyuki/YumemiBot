@@ -226,6 +226,8 @@ const exists = path => {
  * async 校验群配置文件
  */
 const checkGroupConfig = async () => {
+  let update = false;
+
   // 不处理静态模块
   const plugins = await getDir('plugins').then(data => data.filter(plugin => /^[a-z]+$/.test(plugin)));
   const params = await getConfig('params');
@@ -237,7 +239,7 @@ const checkGroupConfig = async () => {
 
     // 群信息存在并且插件数相同则 continue
     if (groups[group_id] && Object.keys(groups[group_id].plugins).length === plugins.length) return true;
-
+    if (!update) update = true;
     if (groups[group_id]) {
       bot.logger.info(`你可能添加了新的插件，正在更新群聊「${group_name} (${group_id})」配置文件...`);
     } else {
@@ -265,7 +267,7 @@ const checkGroupConfig = async () => {
     }
   })
 
-  await setConfig('groups', groups);
+  update && await setConfig('groups', groups);
 }
 
 module.exports = {

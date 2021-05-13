@@ -27,7 +27,7 @@ battle:
   selectSaveLoad: ^查树$
   selectFight: ^查刀$
   updateBattle: ^((\u5468\u76EE|boss|\u8840\u91CF)\s?[1-9]\d*\s?){1,3}$
-  acting: ^\[CQ:at,qq=\d+,text=@.*\]\s*\u4EE3\u62A5\s?\d*$
+  replace: ^\[CQ:at,qq=\d+,text=@.*\]\s?[1-5]?\s?\u4EE3\u62A5\s?\d*$
   # score: ^分数线$
   # rank: ^查询排名[\s][\S]+[\s]?[\S]*$
 

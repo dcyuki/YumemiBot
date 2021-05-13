@@ -1,9 +1,10 @@
 const querystring = require('querystring');
 const { getConfig, httpRequest } = require(`../../utils/util`);
 
-const battle_url = `http://localhost/api/battle`;
-const addZero = number => number < 10 ? '0' + number : number;
 const int_char = ['零', '一', '二', '三', '四', '五'];
+const battle_url = `http://localhost/api/battle`;
+
+const addZero = number => number < 10 ? '0' + number : number;
 
 // 获取当前时间
 const getDate = () => {
@@ -83,7 +84,7 @@ const insertBattle = async ctx => {
   const { reply } = ctx;
   const { version, battle } = await checkBattle(ctx);
   if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
-  if (battle) return reply('当月已开启会战，请勿重提提交');
+  if (battle.battle_id) return reply('当月已开启会战，请勿重提提交');
 
   const { raw_message, group_id } = ctx;
   const { time } = getDate();
@@ -137,7 +138,7 @@ const deleteBattle = async ctx => {
   const { version, battle } = await checkBattle(ctx);
 
   if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
-  if (!battle) return reply('当月未发起会战，请先初始化数据');
+  if (!battle.battle_id) return reply('当月未发起会战，请先初始化数据');
 
   const { group_id, reply } = ctx;
   const { tomonth } = getDate();
@@ -162,7 +163,7 @@ const selectBattle = async ctx => {
   const { version, battle } = await checkBattle(ctx);
 
   if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
-  if (!battle) return reply('当月未发起会战，请先初始化数据');
+  if (!battle.battle_id) return reply('当月未发起会战，请先初始化数据');
 
   const { title, syuume, info, update_time, length } = battle;
   const info_json = JSON.parse(info)
@@ -189,13 +190,47 @@ const selectBattle = async ctx => {
   reply(msg);
 }
 
-// 报刀
-const insertFight = async ctx => {
+// 代报
+const replace = async ctx => {
+  await insertUser(ctx);
+  await insertGuild(ctx);
+  await insertMember(ctx);
+
   const { reply } = ctx;
   const { version, battle } = await checkBattle(ctx);
 
   if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
-  if (!battle) return reply('当月未发起会战，请先初始化数据');
+  if (!battle.battle_id) return reply('当月未发起会战，请先初始化数据');
+
+  const { user_id, raw_message } = ctx;
+  const [replace_id, replace_name, replace_message] = raw_message.match(/(?<=qq=)\d+|(?<=text=@).+(?=\])|(?<=\]).*/g);
+
+  if (replace_id === user_id) {
+    reply(`[CQ:at,qq=${user_id}] 不能自己跟自己代报 (╯▔皿▔)╯`);
+    return;
+  }
+
+  const boss = Number(raw_message.match(/\d(?=\s?\u4EE3\u62A5)/g));
+  const damage = Number(raw_message.match(/(?<=\u4EE3\u62A5\s?)\d+/g));
+  // const damage_info = replace_message.match(/\d(?=\s?\u4EE3\u62A5)|(?<=\u4EE3\u62A5\s?)\d+/g);
+  ctx.card = replace_name;
+  ctx.user_id = replace_id;
+  ctx.raw_message = `${boss ? boss : ``} ${damage ? `报刀 ${damage}` : `尾刀`}`;
+
+  insertFight(ctx);
+}
+
+// 报刀
+const insertFight = async ctx => {
+  await insertUser(ctx);
+  await insertGuild(ctx);
+  await insertMember(ctx);
+
+  const { reply } = ctx;
+  const { version, battle } = await checkBattle(ctx);
+
+  if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
+  if (!battle.battle_id) return reply('当月未发起会战，请先初始化数据');
 
   const { group_id, user_id } = ctx;
   const { today, tomorrow } = getDate();
@@ -211,11 +246,11 @@ const insertFight = async ctx => {
 
   httpRequest(`${battle_url}/get`, 'POST', post_data)
     .then(res => {
-      const { user_id, raw_message, reply } = ctx;
+      const { user_id, nickname, card, raw_message, reply } = ctx;
       let { number = 0 } = res;
 
       if (number === 3) {
-        reply(`[CQ:at,qq=${user_id}] 你今天已经出完3刀了，请不要重复提交数据`);
+        reply(`${card ? card : nickname} 今天已经出完3刀了，请不要重复提交数据`);
         return;
       }
 
@@ -312,7 +347,7 @@ const reservation = async ctx => {
   const { version, battle } = await checkBattle(ctx);
 
   if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
-  if (!battle) return reply('当月未发起会战，请先初始化数据');
+  if (!battle.battle_id) return reply('当月未发起会战，请先初始化数据');
 
   const { info } = battle;
   const { group_id, raw_message, user_id, nickname, card } = ctx;
@@ -475,4 +510,4 @@ const insertMember = ctx => {
     })
 }
 
-module.exports = { initGuild, insertBattle, deleteBattle, selectBattle, insertFight, reservation };
+module.exports = { initGuild, insertBattle, deleteBattle, selectBattle, insertFight, replace, reservation };
