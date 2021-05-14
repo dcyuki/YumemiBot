@@ -13,7 +13,7 @@ webhook.post('/', async ctx => {
       const pushInfo = `Received a push event for ${full_name} to ${ref}
 Summary: ${commit[0]}
 Description: 
-  ${commit[1].replace(/\n/g, '\n  ')}
+  ${commit[1].replace(/\n/g, '\n\t')}
 Author: ${name}
 Committer: ${username}
 Updated: ${timestamp}

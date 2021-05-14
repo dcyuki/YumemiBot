@@ -3,7 +3,7 @@ const { getConfig, httpRequest } = require(`../../utils/util`);
 
 const int_char = ['零', '一', '二', '三', '四', '五'];
 const battle_url = `http://localhost/api/battle`;
-
+// 以后会将 sql 全部整合到 api ，开发初期先手写
 const addZero = number => number < 10 ? '0' + number : number;
 
 // 获取当前时间
@@ -190,6 +190,44 @@ const selectBattle = async ctx => {
   reply(msg);
 }
 
+// 查刀
+const selectFight = async ctx => {
+  const { reply } = ctx;
+  const { version, battle } = await checkBattle(ctx);
+
+  if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
+  if (!battle.battle_id) return reply('当月未发起会战，请先初始化数据');
+
+  const { today, tomorrow } = getDate();
+  const { group_id, user_id, nickname, card } = ctx;
+  const sql = "SELECT number, note, fight_time fight_time FROM fight_view WHERE group_id = ? AND user_id = ? AND fight_time BETWEEN ? AND ?";
+  const params = [group_id, user_id, today, tomorrow];
+  const post_data = querystring.stringify({ sql, params });
+
+  httpRequest(`${battle_url}/all`, 'POST', post_data)
+    .then(res => {
+      const { length } = res;
+      let msg = `**********  出刀信息  **********\n`;
+
+      for (let i = 0; i < length; i++) {
+        msg += `\n\t${res[i].fight_time}：\n\t\t${res[i].note}\n`;
+      }
+      msg += `${length < 1 ? `\n\t暂无数据\n` : ``}`;
+      msg += `\n*******************************`;
+      msg += `\n成员 ${card ? card : nickname} ${length ? (`${res[length - 1].number < 3 ? `还有 ${3 - res[length - 1].number} 刀未出` : `已出完三刀`}`) : `今日未出刀`}`;
+      reply(msg);
+    })
+    .catch(err => {
+      reply(err.message);
+      bot.logger.error(err);
+    })
+}
+
+// 撤销
+const undo = ctx => {
+
+}
+
 // 代报
 const replace = async ctx => {
   await insertUser(ctx);
@@ -210,8 +248,8 @@ const replace = async ctx => {
     return;
   }
 
-  const boss = Number(raw_message.match(/\d(?=\s?\u4EE3\u62A5)/g));
-  const damage = Number(raw_message.match(/(?<=\u4EE3\u62A5\s?)\d+/g));
+  const boss = Number(replace_message.match(/\d(?=\s?\u4EE3\u62A5)/g));
+  const damage = Number(replace_message.match(/(?<=\u4EE3\u62A5\s?)\d+/g));
   // const damage_info = replace_message.match(/\d(?=\s?\u4EE3\u62A5)|(?<=\u4EE3\u62A5\s?)\d+/g);
   ctx.card = replace_name;
   ctx.user_id = replace_id;
@@ -285,7 +323,6 @@ const insertFight = async ctx => {
 
       number = damage ? parseInt(number) + 1 : number + 0.5;
 
-      const { nickname, card } = ctx;
       const { time } = getDate();
       const { battle_id, syuume } = battle;
       const note = `${card ? card : nickname} 对 ${int_char[boss]}王 造成了 ${damage ? `${damage} 点伤害` : `${all_blood[boss - 1]} 点伤害并击破`}`;
@@ -510,4 +547,4 @@ const insertMember = ctx => {
     })
 }
 
-module.exports = { initGuild, insertBattle, deleteBattle, selectBattle, insertFight, replace, reservation };
+module.exports = { initGuild, insertBattle, deleteBattle, selectBattle, insertFight, replace, selectFight, reservation };
