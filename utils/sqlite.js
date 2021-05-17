@@ -1,5 +1,5 @@
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database(`${__yumemi}/data/db/demo.db`);
+const db = new sqlite3.Database(`${__yumemi}/data/db/yumemi.db`);
 
 const get = (sql, params) => {
   return new Promise((resolve, reject) => {
