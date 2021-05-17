@@ -17,8 +17,9 @@ const getDate = () => {
   const morrow = addZero(date.getDate() + 1);
   const hour = addZero(date.getHours());
   const minute = addZero(date.getMinutes());
+  const seconds = addZero(date.getSeconds());
 
-  const time = `${year}-${month}-${day} ${hour}:${minute}`;
+  const time = `${year}-${month}-${day} ${hour}:${minute}:${seconds}`;
   const today = `${year}-${month}-${day} 05`;
   const tomorrow = `${year}-${month}-${morrow} 05`;
   const the_month = `${year}-${month}`;
@@ -246,35 +247,33 @@ const selectBattle = async ctx => {
 
 // }
 
-// // 代报
-// const replace = async ctx => {
-//   await insertUser(ctx);
-//   await insertGuild(ctx);
-//   await insertMember(ctx);
+// 代报
+const replace = async ctx => {
+  await checkBattle(ctx);
 
-//   const { reply } = ctx;
-//   const { version, battle } = await checkBattle(ctx);
+  const { reply } = ctx;
+  const { version, battle } = await getBattle(ctx);
 
-//   if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
-//   if (!battle.battle_id) return reply('当月未发起会战，请先初始化数据');
+  if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
+  if (!battle.id) return reply('当月未发起会战，请先初始化数据');
 
-//   const { user_id, raw_message } = ctx;
-//   const [replace_id, replace_name, replace_message] = raw_message.match(/(?<=qq=)\d+|(?<=text=@).+(?=\])|(?<=\]).*/g);
+  const { user_id, raw_message } = ctx;
+  const [replace_id, replace_name, replace_message] = raw_message.match(/(?<=qq=)\d+|(?<=text=@).+(?=\])|(?<=\]).*/g);
 
-//   if (replace_id === user_id) {
-//     reply(`[CQ:at,qq=${user_id}] 不能自己跟自己代报 (╯▔皿▔)╯`);
-//     return;
-//   }
+  if (replace_id === user_id) {
+    reply(`[CQ:at,qq=${user_id}] 不能自己跟自己代报 (╯▔皿▔)╯`);
+    return;
+  }
 
-//   const boss = Number(replace_message.match(/\d(?=\s?\u4EE3\u62A5)/g));
-//   const damage = Number(replace_message.match(/(?<=\u4EE3\u62A5\s?)\d+/g));
-//   // const damage_info = replace_message.match(/\d(?=\s?\u4EE3\u62A5)|(?<=\u4EE3\u62A5\s?)\d+/g);
-//   ctx.card = replace_name;
-//   ctx.user_id = replace_id;
-//   ctx.raw_message = `${boss ? boss : ``} ${damage ? `报刀 ${damage}` : `尾刀`}`;
+  const boss = Number(replace_message.match(/\d(?=\s?\u4EE3\u62A5)/g));
+  const damage = Number(replace_message.match(/(?<=\u4EE3\u62A5\s?)\d+/g));
+  // const damage_info = replace_message.match(/\d(?=\s?\u4EE3\u62A5)|(?<=\u4EE3\u62A5\s?)\d+/g);
+  ctx.card = replace_name;
+  ctx.user_id = replace_id;
+  ctx.raw_message = `${boss ? boss : ``} ${damage ? `报刀 ${damage}` : `尾刀`}`;
 
-//   insertBeat(ctx);
-// }
+  insertBeat(ctx);
+}
 
 // 报刀
 const insertBeat = async ctx => {
@@ -564,4 +563,4 @@ const checkBattle = async ctx => {
   await insertMember(ctx)
 }
 
-module.exports = { initGuild, insertBattle, deleteBattle, selectBattle, insertBeat, reservation };
+module.exports = { initGuild, insertBattle, deleteBattle, selectBattle, insertBeat, replace, reservation };
