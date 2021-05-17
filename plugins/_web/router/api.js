@@ -15,6 +15,8 @@ const battle_sql = new Map([
   ['delete_battle', 'DELETE FROM battle WHERE group_id = ? AND start_date BETWEEN ? AND ?'],
   ['get_now_beat', 'SELECT * FROM beat WHERE group_id = ? AND user_id = ? AND fight_time BETWEEN ? AND ? ORDER BY number DESC'],
   ['set_beat', 'INSERT INTO beat (battle_id, group_id, user_id, number, syuume, boss, damage, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'],
+  ['update_battle', 'UPDATE battle SET syuume = ?, one = ?, two = ?, three = ?, four = ?, five = ?, crusade = ?, update_time = ? WHERE group_id = ? AND start_date BETWEEN ? AND ?'],
+  ['reservation', 'UPDATE battle SET crusade = ?, update_time = ? WHERE group_id = ? AND start_date BETWEEN ? AND ?'],
 ]);
 
 api.use(bodyParser());
@@ -42,6 +44,8 @@ api.post('/battle/:action', async ctx => {
     case 'set_battle':
     case 'delete_battle':
     case 'set_beat':
+    case 'update_battle':
+    case 'reservation':
       action = 'run';
       break;
   }
