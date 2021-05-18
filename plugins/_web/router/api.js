@@ -13,10 +13,11 @@ const battle_sql = new Map([
   ['get_now_battle', 'SELECT battle.id, battle.title, battle.syuume, battle.one, battle.two, battle.three, battle.four, battle.five, battle.crusade, count(beat.id) AS length, battle.update_time FROM battle LEFT JOIN beat ON battle.id = beat.battle_id AND beat.fight_time BETWEEN ? AND ? WHERE battle.group_id = ? AND battle.start_date BETWEEN ? AND ?'],
   ['set_battle', 'INSERT INTO battle (group_id, title, one, two, three, four, five, crusade) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'],
   ['delete_battle', 'DELETE FROM battle WHERE group_id = ? AND start_date BETWEEN ? AND ?'],
-  ['get_now_beat', 'SELECT * FROM beat WHERE group_id = ? AND user_id = ? AND fight_time BETWEEN ? AND ? ORDER BY number DESC'],
+  ['get_now_beat', 'SELECT number, boss, damage, fight_time FROM beat WHERE group_id = ? AND user_id = ? AND fight_time BETWEEN ? AND ? ORDER BY fight_time DESC'],
   ['set_beat', 'INSERT INTO beat (battle_id, group_id, user_id, number, syuume, boss, damage, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'],
   ['update_battle', 'UPDATE battle SET syuume = ?, one = ?, two = ?, three = ?, four = ?, five = ?, crusade = ?, update_time = ? WHERE group_id = ? AND start_date BETWEEN ? AND ?'],
   ['reservation', 'UPDATE battle SET crusade = ?, update_time = ? WHERE group_id = ? AND start_date BETWEEN ? AND ?'],
+  ['update_beat', 'UPDATE beat SET damage = ? WHERE user_id = ? AND number = ? AND fight_time BETWEEN ? AND ?'],
 ]);
 
 api.use(bodyParser());
@@ -35,7 +36,6 @@ api.post('/battle/:action', async ctx => {
     case 'get_groups':
     case 'get_member':
     case 'get_now_battle':
-    case 'get_now_beat':
       action = 'get';
       break;
     case 'set_user':
@@ -46,7 +46,11 @@ api.post('/battle/:action', async ctx => {
     case 'set_beat':
     case 'update_battle':
     case 'reservation':
+    case 'update_beat':
       action = 'run';
+      break;
+    case 'get_now_beat':
+      action = 'all';
       break;
   }
 

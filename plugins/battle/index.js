@@ -2,10 +2,11 @@ const { resolve } = require('path');
 const querystring = require('querystring');
 const { getConfig, httpRequest } = require(`../../utils/util`);
 
+const battle_url = `http://localhost/api/battle`;
 const cn_char = ['零', '一', '二', '三', '四', '五'];
 const en_char = ['zero', 'one', 'two', 'three', 'four', 'five'];
-const battle_url = `http://localhost/api/battle`;
-// 会逐步将 sql 整合到 api ，开发初期先在当前页面执行 sql
+
+// 数字添加0
 const addZero = number => number < 10 ? '0' + number : number;
 
 // 获取当前时间
@@ -39,27 +40,20 @@ const getMaxBlood = async (version, syuume) => {
 
 // 获取当天会战数据
 const getBattle = ctx => {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const { group_id } = ctx;
     const { today, tomorrow, the_month, next_month } = getDate();
+    const { [group_id]: { plugins: { battle: { version } } } } = await getConfig('groups')
+    const params = querystring.stringify({
+      params: [today, tomorrow, group_id, the_month, next_month]
+    });
 
-    getConfig('groups')
-      .then(data => {
-        const { [group_id]: { plugins: { battle: { version } } } } = data;
-        const params = querystring.stringify({
-          params: [today, tomorrow, group_id, the_month, next_month]
+    httpRequest(`${battle_url}/get_now_battle`, 'POST', params)
+      .then(res => {
+        resolve({
+          version: version,
+          battle: res
         });
-
-        httpRequest(`${battle_url}/get_now_battle`, 'POST', params)
-          .then(res => {
-            resolve({
-              version: version,
-              battle: res
-            });
-          })
-          .catch(err => {
-            reject(err);
-          })
       })
       .catch(err => {
         reject(err);
@@ -297,9 +291,9 @@ const insertBeat = async ctx => {
     .then(res => {
       const { nickname, card, raw_message } = ctx;
       // 判断当日已出多少刀
-      let { number = 0 } = res;
+      const number_sum = res.length ? res[0].number : 0;
 
-      if (number === 3) return reply(`${card ? card : nickname} 今天已经出完3刀了，请不要重复提交数据`);
+      if (number_sum === 3) return reply(`${card ? card : nickname} 今天已经出完3刀了，请不要重复提交数据`);
 
       const { one, two, three, four, five } = battle;
       const damage = Number(raw_message.match(/(?<=报刀).*/g));
@@ -323,13 +317,10 @@ const insertBeat = async ctx => {
       // 伤害溢出
       if (damage && damage >= all_blood[boss - 1]) return reply(`伤害值超出 boss 剩余血量，若以斩杀 boss 请使用「尾刀」指令`);
 
-      number = damage ? parseInt(number) + 1 : number + 0.5;
-
       const { id, syuume, crusade } = battle;
       const note = `${card ? card : nickname} 对 ${cn_char[boss]}王 造成了 ${damage ? `${damage} 点伤害` : `${all_blood[boss - 1]} 点伤害并击破`}`;
-
       const params = querystring.stringify({
-        params: [id, group_id, user_id, number, syuume, boss, damage ? damage : all_blood[boss - 1], note]
+        params: [id, group_id, user_id, damage ? parseInt(number_sum) + 1 : number_sum + 0.5, syuume, boss, damage ? damage : all_blood[boss - 1], note]
       });
 
       // 插入 beat 数据
@@ -350,16 +341,12 @@ const insertBeat = async ctx => {
 
           // 清空讨伐数据
           const crusade_json = JSON.parse(crusade);
-          console.log(`crusade_json: ${crusade_json}`)
           const crusade_set = new Set(crusade_json[en_char[boss]]);
-          console.log(`crusade_set: ${crusade_set}`)
           const crusade_member = `${card ? card : nickname}@${user_id}`;
-          console.log(`crusade_member: ${crusade_member}`)
           crusade_set.has(crusade_member) && crusade_set.delete(crusade_member)
           crusade_json[en_char[boss]] = damage ? [...crusade_set] : [];
 
           reply(`${note}${next < 5 ? '' : `\n所有 boss 已被斩杀，开始进入 ${syuume + 1} 周目`}`);
-          console.log(`crusade_json: ${JSON.stringify(crusade_json, null, 2)}`)
 
           // 更新 battle
           updateBattle(
@@ -375,6 +362,63 @@ const insertBeat = async ctx => {
         })
     })
     .catch(err => {
+      bot.logger.error(err);
+    })
+}
+
+// 修改出刀
+const updateBeat = async ctx => {
+  await checkBattle(ctx);
+
+  const { reply } = ctx;
+  const { version, battle } = await getBattle(ctx);
+
+  if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
+  if (!battle.id) return reply('当月未发起会战，请先初始化数据');
+
+  const { today, tomorrow } = getDate();
+  const { group_id, user_id, raw_message } = ctx;
+  // 当天是否已出刀
+  const params = querystring.stringify({
+    params: [group_id, user_id, today, tomorrow]
+  });
+  httpRequest(`${battle_url}/get_now_beat`, 'POST', params)
+    .then(res => {
+      const [number, damage] = raw_message.match(/\d(\.5)?(?=\s?修改)|(?<=修改\s?)\d+/g).map(Number);
+      const beat_info = res.find(item => item.number === number)
+      const { nickname, card } = ctx;
+
+      if (!beat_info) return reply(`${card ? card : nickname} 没有第 ${number} 刀的出刀信息`);
+
+      const params = querystring.stringify({
+        params: [damage, user_id, number, today, tomorrow]
+      });
+
+      httpRequest(`${battle_url}/update_beat`, 'POST', params)
+        .then(() => {
+          reply(`修改成功`);
+
+          // 修改 battle 信息
+          const { boss } = beat_info;
+          const { syuume, one, two, three, four, five, crusade } = battle;
+          const all_blood = [one, two, three, four, five];
+
+          // 修改血量
+          all_blood[boss] = all_blood[boss] + (beat_info.damage - damage)
+          updateBattle(
+            ctx,
+            syuume,
+            all_blood,
+            crusade
+          );
+        })
+        .catch(err => {
+          reply(err);
+          bot.logger.error(err);
+        })
+    })
+    .catch(err => {
+      reply(err);
       bot.logger.error(err);
     })
 }
@@ -563,4 +607,4 @@ const checkBattle = async ctx => {
   await insertMember(ctx)
 }
 
-module.exports = { initGuild, insertBattle, deleteBattle, selectBattle, insertBeat, replace, reservation };
+module.exports = { initGuild, insertBattle, deleteBattle, selectBattle, insertBeat, replace, reservation, updateBeat };

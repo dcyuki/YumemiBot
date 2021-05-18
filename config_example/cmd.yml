@@ -8,7 +8,7 @@ _terminal:
   sugar: ^(开启|启用|打开|关闭|禁用)[\s]?[a-z]+(18)?$
 
 _tips:
-  rank: ^(b|bl|国|t|tw|台|省|j|jp|日)服?rank$
+  rank: ^(b|bl|国|t|tw|台|省|j|jp|日)服?(r|R)ank$
   help: ^(帮助|文档|help)$
   login: ^(登录|login)$
   list: ^(列表|服务|list)$
@@ -20,7 +20,7 @@ battle:
   insertBattle: ^开启\S\S座会战$
   insertBeat: (^[1-5]?\s?报刀\s?[1-9]\d*$|^[1-5]?\s?尾刀$)
   deleteBattle: ^中止会战$
-  updateFight: ^修改[\s][0-3](\.5)?[\s][1-9]+\d?$
+  updateBeat: ^[0-3](\.5)?[\s]?修改[\s]?[1-9]\d*$
   reservation: ^预约[\s]?[1-5]?$
   selectBattle: ^状态$
   saveload: ^(挂树|sl)$
