@@ -203,43 +203,38 @@ const selectBattle = async ctx => {
   reply(msg);
 }
 
-// // 查刀
-// const selectFight = async ctx => {
-//   const { reply } = ctx;
-//   const { version, battle } = await checkBattle(ctx);
+// 查刀
+const selectBeat = async ctx => {
+  const { reply } = ctx;
+  const { version, battle } = await getBattle(ctx);
 
-//   if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
-//   if (!battle.battle_id) return reply('当月未发起会战，请先初始化数据');
+  if (version === 'none') return reply('检测到当前群聊未定义游戏服务器，在使用会战功能前请务必初始化参数');
+  if (!battle.id) return reply('当月未发起会战，请先初始化数据');
 
-//   const { today, tomorrow } = getDate();
-//   const { group_id, user_id, nickname, card } = ctx;
-//   const sql = "SELECT number, note, fight_time fight_time FROM fight_view WHERE group_id = ? AND user_id = ? AND fight_time BETWEEN ? AND ?";
-//   const params = [group_id, user_id, today, tomorrow];
-//   const post_data = querystring.stringify({ sql, params });
+  const { today, tomorrow } = getDate();
+  const { group_id, user_id, nickname, card } = ctx;
+  const params = querystring.stringify({
+    params: [group_id, user_id, today, tomorrow]
+  });
 
-//   httpRequest(`${battle_url}/all`, 'POST', post_data)
-//     .then(res => {
-//       const { length } = res;
-//       let msg = `**********  出刀信息  **********\n`;
+  httpRequest(`${battle_url}/get_now_beat`, 'POST', params)
+    .then(res => {
+      const { length } = res;
+      let msg = `**********  出刀信息  **********\n`;
 
-//       for (let i = 0; i < length; i++) {
-//         msg += `\n\t${res[i].fight_time}：\n\t\t${res[i].note}\n`;
-//       }
-//       msg += `${length < 1 ? `\n\t暂无数据\n` : ``}`;
-//       msg += `\n*******************************`;
-//       msg += `\n成员 ${card ? card : nickname} ${length ? (`${res[length - 1].number < 3 ? `还有 ${3 - res[length - 1].number} 刀未出` : `已出完三刀`}`) : `今日未出刀`}`;
-//       reply(msg);
-//     })
-//     .catch(err => {
-//       reply(err.message);
-//       bot.logger.error(err);
-//     })
-// }
-
-// // 撤销
-// const undo = ctx => {
-
-// }
+      for (let i = 0; i < length; i++) {
+        msg += `\n\t${res[i].fight_time}：\n\t\t(${res[i].number}) ${card ? card : nickname} 对 ${cn_char[res[i].boss]}王 造成了 ${res[i].damage} 点伤害\n`;
+      }
+      msg += `${length < 1 ? `\n\t暂无数据\n` : ``}`;
+      msg += `\n*******************************`;
+      msg += `\n成员 ${card ? card : nickname} ${length ? (`${res[0].number < 3 ? `还有 ${3 - res[0].number} 刀未出` : `已出完三刀`}`) : `今日未出刀`}`;
+      reply(msg);
+    })
+    .catch(err => {
+      reply(err.message);
+      bot.logger.error(err);
+    })
+}
 
 // 代报
 const replace = async ctx => {
@@ -404,7 +399,8 @@ const updateBeat = async ctx => {
           const all_blood = [one, two, three, four, five];
 
           // 修改血量
-          all_blood[boss] = all_blood[boss] + (beat_info.damage - damage)
+          all_blood[boss - 1] = all_blood[boss - 1] + (beat_info.damage - damage);
+
           updateBattle(
             ctx,
             syuume,
@@ -607,4 +603,14 @@ const checkBattle = async ctx => {
   await insertMember(ctx)
 }
 
-module.exports = { initGuild, insertBattle, deleteBattle, selectBattle, insertBeat, replace, reservation, updateBeat };
+module.exports = {
+  initGuild,
+  insertBattle,
+  deleteBattle,
+  selectBattle,
+  insertBeat,
+  replace,
+  reservation,
+  updateBeat,
+  selectBeat
+};
