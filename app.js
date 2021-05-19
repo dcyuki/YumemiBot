@@ -47,6 +47,7 @@ class Context {
 }
 
 console.log('※ develop 分支保持着周更甚至日更，除非有特殊需求，否则不建议 clone 本分支!');
+// Acsii Font Name: Mini: http://patorjk.com/software/taag/
 const logo = `--------------------------------------------------------------------------------------------
                                                                              _         
       \\    / _  | |  _  _  ._ _   _    _|_  _    \\_/    ._ _   _  ._ _  o   |_)  _ _|_ 
@@ -89,7 +90,7 @@ bot.on('system.online', () => {
           })
           .catch(err => {
             bot.logger.warn(`${plugin} 模块未加载`);
-            bot.logger.warn(`${err.message}`);
+            // bot.logger.warn(`${err.message}`);
             j++;
           })
       }
@@ -134,13 +135,9 @@ bot.on('message.group', async data => {
   const { message_id, sender: { nickname, card } } = data;
   const ctx = new Context(message_id, group_id, group_name, raw_message, user_id, nickname, card, level, reply)
 
-  // chat 始终执行一次
-  plugins._tips.chat(ctx);
-
   // 正则匹配
   const cmd = await getConfig('cmd');
 
-  out:
   for (const plugin in cmd) {
     for (const serve in cmd[plugin]) {
       const reg = new RegExp(cmd[plugin][serve]);
@@ -151,11 +148,10 @@ bot.on('message.group', async data => {
       if (/^[a-z]/.test(plugin)) {
         const { plugins: { [plugin]: { enable } } } = group;
 
-        if (!enable) return reply(`当前群聊 ${plugin} 模块未启用...`);
+        if (!enable) continue;
       }
 
       plugins[plugin][serve](ctx);
-      break out;
     }
   }
 });

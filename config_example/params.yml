@@ -10,7 +10,7 @@ buy:
   version: cn
 
 saucenao:
-  enable: false
+  enable: true
 
 setu:
   enable: false
