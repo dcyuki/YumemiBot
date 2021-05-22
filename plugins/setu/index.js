@@ -68,7 +68,7 @@ const reload = async () => {
       });
 
     // 此处只是 http 请求发送完毕，并非全部下载完毕
-    bot.logger.mark(`r${i + 1} https 请求发送完毕`);
+    bot.logger.mark(`r${i + 17} https 请求发送完毕`);
   }
 
   bot.logger.info(`r17 :${r17_length} ，r18 ${r18_length} ， ${r17_length < setu_max ? 'r17, ' : ''}${r18_length < setu_max ? 'r18' : ''} 数量不足 ${setu_max}，开始补充库存...`)
