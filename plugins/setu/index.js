@@ -168,6 +168,6 @@ const search = async ctx => {
 
 key ?
   reload() :
-  bot.logger.warn(`你没有添加 apikey ，setu 服务将无法使用！`);
+  bot.logger.warn(`你没有添加 apikey ，setu 服务将无法正常使用！`);
 
 module.exports = { random, search }

@@ -42,7 +42,8 @@ gobang:
   start: ^五子棋[\s]?[5-9]?$
   move: ^落子[\s]?[a-zA-Z][1-9]+[0-9]?$
   rollback: ^悔棋$
-  over: ^((结束|中止)对局|认输)$
+  surrender: ^(投降|认输)$
+  over: ^(结束|中止)对局$
 
 guess:
   avatar: (^猜头像$|.*)
