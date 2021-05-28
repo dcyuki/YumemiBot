@@ -56,7 +56,8 @@ jjc:
 
 q&a:
   answer: \S+
-  question: ^有人(问|问你|(对|跟)你说)\S+你就?(回?答|说|告诉他|告诉她)\S+$
+  question: ^有人(问|说)\S+你就?(回|答|说|告诉他|告诉她)\S+$
+  select: ^看看有人问$
 
 saucenao:
   search: ^(搜图|\[CQ:image,file=.+,url=.+\])$

@@ -1,6 +1,6 @@
 const { access, readdirSync } = require('fs');
 const { createClient } = require('oicq');
-const { getConfig, getConfigSync, setConfig, exists, checkGroupConfig } = require('./utils/util');
+const { getConfig, getConfigSync, setConfig, checkGroupConfig } = require('./utils/util');
 
 class Bot {
   constructor(account, password, config) {
@@ -73,11 +73,7 @@ const cmd = getConfigSync('cmd');
 
 // 登录成功
 bot.on('system.online', () => {
-  // 获取所有插件，只在启动项目的时候执行一次，没必要写到 util.js 里
   const plugins_dir = readdirSync('./plugins');
-
-  bot.logger.mark(`----------`);
-  bot.logger.mark('Login success ! 初始化模块...');
 
   for (const plugin of plugins_dir) {
     // 插件是否存在 index.js 文件
@@ -88,12 +84,6 @@ bot.on('system.online', () => {
         ;
     });
   }
-
-  const { length } = Object.keys(plugins);
-
-  bot.logger.mark(`加载了${length}个插件，${plugins_dir.length - length}个失败。`);
-  bot.logger.mark(`初始化完毕，开始监听群聊。`);
-  bot.logger.mark(`----------`);
 
   checkGroupConfig();
 });
