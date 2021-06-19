@@ -2,17 +2,19 @@ _master:
   title: ^申请头衔[\s]?.+$
 
 _terminal:
-  update: ^>[\s]?update[\s][a-z]+[\s][a-z0-9]+[\s][a-z0-9]+$
-  quit: ^>[\s]?quit$
-  state: ^>[\s]?state$
-  sugar: ^(开启|启用|打开|关闭|禁用)[\s]?[a-z]+(18)?$
+  list: ^(群服务|list)$
+  state: ^(信息|state)$
+  setting: ^(设置|setting)$
+  quit: ^>quit$
+  control: ^>(enable|disable)[\s][a-z]+$
+  update: ^>update[\s][a-z]+[\s][a-z0-9]+[\s][a-z0-9]+$
+  sugar: ^(开启|启用|打开|关闭|禁用)[a-z]+(18)?$
 
 _tips:
   chat: .*
   rank: ^(b|bl|国|t|tw|台|省|j|jp|日)服?(r|R)ank$
   help: ^(帮助|文档|help)$
   login: ^(登录|login)$
-  list: ^(列表|服务|list)$
   settings: ^(设置|settings)$
   ver: ^(版本|ver|version)$
 

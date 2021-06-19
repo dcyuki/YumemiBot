@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="https://docs.littlemaple.club/public/images/avatar/logo.png" width="200"/>
+    <img src="https://docs.littlemaple.club/public/images/avatar/yumemi.png" width="200"/>
     <h3>
         - YumemiBot -
     </h3>
@@ -15,4 +15,7 @@
 
 *****
 
-> 本项目是一个基于 [OneBot](https://github.com/howmanybots/onebot) 协议，使用 [JavaScript](https://www.javascript.com/) 语言开发的 [QQ](https://im.qq.com/) 机器人
+[![node engine](https://img.shields.io/node/v/oicq.svg)](https://nodejs.org)
+[![qq group](https://img.shields.io/badge/qq-1030982964-12B7F5)](https://jq.qq.com/?_wv=1027&k=3hcWCnhq)
+
+> 本项目是一个基于 [oicq](https://github.com/takayama-lily/oicq) 框架，使用 [JavaScript](https://www.javascript.com/) 语言开发的 [QQ](https://im.qq.com/) 机器人
