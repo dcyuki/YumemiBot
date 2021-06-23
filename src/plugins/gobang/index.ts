@@ -1,34 +1,6 @@
 import { Client, GroupMessageEventData } from "oicq";
 
-import { checkCommand } from "../../utils/bot";
-
-class Battle implements IBattle {
-  black: number;
-  white: number | null;
-  _board: string[][];
-  offensive: boolean;
-  history: number[][];
-  timeout: NodeJS.Timeout;
-
-  constructor(user_id: number, board: string[][], timeout: NodeJS.Timeout) {
-    this.black = user_id;
-    this.white = null;
-    this._board = board;
-    this.offensive = true;
-    this.history = [];
-    this.timeout = timeout;
-  }
-
-  get board() {
-    return this._board;
-  }
-
-  set board(val) {
-    // 换手
-    this.offensive = !this.offensive;
-    this._board = val;
-  }
-}
+import { Battle, checkCommand } from "../../utils/yumemi";
 
 const all_battle: Map<number, Battle> = new Map();
 const chess: Set<string> = new Set(['●', '○']);

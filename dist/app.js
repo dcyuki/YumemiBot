@@ -4,10 +4,9 @@ const path_1 = require("path");
 const log4js_1 = require("log4js");
 const fs_1 = require("fs");
 const util_1 = require("./utils/util");
-const bot_1 = require("./utils/bot");
+const yumemi_1 = require("./utils/yumemi");
 // 插件列表与服务列表
-// const all_serve: string[] = [];
-const all_plugin = [];
+const plugin_list = [];
 console.log('※ develop 分支保持着周更甚至日更，不熟悉源码甚至项目都跑步起来，除非有特殊需求，否则不建议 clone 本分支!\n');
 (() => {
     const wellcome = `--------------------------------------------------------------------------------------------
@@ -24,7 +23,10 @@ console.log('※ develop 分支保持着周更甚至日更，不熟悉源码甚�
         groups: `${__yumeminame}/config/groups`,
         plugins: `${__dirname}/plugins`,
         services: `${__dirname}/services`,
-        setu: `${__yumeminame}/data/images/setu`
+        setu: `${__yumeminame}/data/images/setu`,
+        emoji: `${__yumeminame}/data/images/emoji`,
+        dynamic: `${__yumeminame}/data/dynamic`,
+        db: `${__yumeminame}/data/db`,
     };
     global.yumemi = {
         api: util_1.getProfileSync('api'),
@@ -49,9 +51,7 @@ console.log('※ develop 分支保持着周更甚至日更，不熟悉源码甚�
             // 目录是否存在 index 文件
             try {
                 fs_1.accessSync(`${path.plugins}/${plugin}/index.js`);
-                // /^(?!_).+/.test(plugin) ? all_plugin.push(plugin) : all_serve.push(plugin);
-                // /^(?!_).+/.test(plugin) && all_plugin.push(plugin);
-                all_plugin.push(plugin);
+                plugin_list.push(plugin);
             }
             catch (err) {
                 yumemi.logger.warn(`${plugin} 目录下不存在 index 文件`);
@@ -67,15 +67,15 @@ for (let bot_url of bot_dir) {
     const [bot_name,] = bot_url.split('.');
     const { qq, plugins, config } = util_1.getProfileSync(bot_name, './config/bots');
     const { master, uin, password } = qq;
-    const bot = new bot_1.Bot(master, uin, password, config).linkStart();
+    const bot = new yumemi_1.Bot(master, uin, password, config).linkStart();
     bot.master = master;
     bots.set(bot_name, bot);
     bot.on("system.online", () => {
         bot.logger.mark(`正在校验配置文件...`);
         // 校验群文件
-        bot_1.checkGroup(bot, all_plugin);
+        yumemi_1.checkGroup(bot, plugin_list);
         // 加载插件
-        for (const plugin_name of plugins.length ? plugins : all_plugin) {
+        for (const plugin_name of plugins.length ? plugins : plugin_list) {
             const plugin = require(`${path.plugins}/${plugin_name}`);
             plugin.activate(bot);
             bot.plugins.set(plugin_name, plugin);

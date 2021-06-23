@@ -1,7 +1,7 @@
 import * as http from 'http';
 import * as https from 'https';
 
-function httpNetwork(method: 'GET' | 'POST', url: string, params: string = ''): Promise<unknown> {
+function httpNetwork(method: 'GET' | 'POST', url: string, params: string = ''): Promise<any> {
   return new Promise((resolve, reject) => {
     const headers = {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -60,7 +60,7 @@ function httpNetwork(method: 'GET' | 'POST', url: string, params: string = ''): 
   })
 }
 
-function httpsNetwork(method: 'GET' | 'POST', url: string, params: string = ''): Promise<unknown> {
+function httpsNetwork(method: 'GET' | 'POST', url: string, params: string = ''): Promise<any> {
   return new Promise((resolve, reject) => {
     const headers = {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -128,7 +128,7 @@ const httpRequest = {
    * @param url 网络请求 url
    * @param params url 参数
    */
-  get: (url: string, params: string = ''): Promise<unknown> => {
+  get: (url: string, params: string = ''): Promise<any> => {
     return new Promise((resolve, reject) => {
       httpNetwork('GET', `${url}${params}`)
         .then(res => {
@@ -145,7 +145,7 @@ const httpRequest = {
    * @param url 网络请求 url
    * @param params post 参数
    */
-  post: (url: string, params: string | undefined): Promise<unknown> => {
+  post: (url: string, params: string | undefined): Promise<any> => {
     return new Promise((resolve, reject) => {
       httpNetwork('POST', url, params)
         .then(res => {
@@ -168,7 +168,7 @@ const httpsRequest = {
    * @param url 网络请求 url
    * @param params url 参数
    */
-  get: (url: string, params: string = ''): Promise<unknown> => {
+  get: (url: string, params: string = ''): Promise<any> => {
     return new Promise((resolve, reject) => {
       httpsNetwork('GET', `${url}${params}`)
         .then(res => {
@@ -185,7 +185,7 @@ const httpsRequest = {
    * @param url 网络请求 url
    * @param params post 参数
    */
-  post: (url: string, params: string | undefined): Promise<unknown> => {
+  post: (url: string, params: string | undefined): Promise<any> => {
     return new Promise((resolve, reject) => {
       httpsNetwork('POST', url, params)
         .then(res => {
@@ -198,6 +198,6 @@ const httpsRequest = {
   }
 }
 
-export { 
-  httpRequest, httpsRequest 
+export {
+  httpRequest, httpsRequest
 }

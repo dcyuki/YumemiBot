@@ -4,28 +4,34 @@ import { uptime, totalmem, freemem, version, release } from "os";
 
 import { getSetuDir } from "../setu";
 import { setProfile } from "../../utils/util";
-import { getLevel, checkCommand } from "../../utils/bot";
+import { getLevel, checkCommand } from "../../utils/yumemi";
 
 // 插件控制
 async function control(bot: Client, data: GroupMessageEventData) {
   const { uin, groups } = bot;
   const { group_id, user_id, raw_message, reply } = data;
   const [action, plugin] = raw_message.split(' ');
+
+  const isAll = plugin === 'all';
+  const isEnable = action === '>enable';
   const plugins: string[] = groups[group_id].plugins;
 
   let msg: string | null = null;
+
   switch (true) {
-    // 有bug，待优化
-    case action === '>enable' && !bot.plugins.has(plugin):
+    case isEnable && !isAll && !bot.plugins.has(plugin):
       msg = `不存在 ${plugin} 服务，请输入合法参数`;
       break
 
-    case action === '>enable' && plugins.includes(plugin):
+    case isEnable && plugins.includes(plugin):
       msg = `已启用 ${plugin} 服务，不要重复启用`;
       break
 
-    case action === '>disable' && !plugins.includes(plugin):
+    case action === '>disable' && !isAll && !plugins.includes(plugin):
       msg = `没有启用 ${plugin} 服务，不要重复禁用`;
+      break
+    case plugin === 'all':
+      plugins.length = 0;
       break
   }
 
@@ -37,15 +43,21 @@ async function control(bot: Client, data: GroupMessageEventData) {
   const level = await getLevel(bot, data);
 
   if (level > 2) {
-    action === '>enable' ?
-      plugins.push(plugin) :
+    isEnable ?
+      (
+        !isAll ?
+          plugins.push(plugin) :
+          bot.plugins.forEach((val, key) => /^(?!_).+/.test(key) && plugins.push(key))
+      ) :
       plugins.splice(plugins.findIndex(item => item === plugin), 1);
 
     setProfile(uin.toString(), groups, path.groups)
       .then(() => {
-        action === '>enable' ?
-          reply(`plugin: {\n  "${plugin}": "deactivate  >>>  activate"\n}`) :
-          reply(`plugin: {\n  "${plugin}": "activate  >>>  deactivate"\n}`);
+        if (!isAll) {
+          reply(`plugin: {\n  "${plugin}": ${isEnable ? "deactivate  >>>  activate" : "activate  >>>  deactivate"}\n`);
+        } else {
+          reply(isEnable ? '所有插件加载完毕 ♪' : '所有插件已禁用');
+        }
       })
       .catch((err) => {
         reply(err);
@@ -130,6 +142,10 @@ function sugar(bot: Client, data: GroupMessageEventData): void {
       data.raw_message = `>update bilibili ${setting} ${param}`;
       update(bot, data);
       break;
+    case '群服务':
+      data.raw_message = `>${param ? 'enable' : 'disable'} all`;
+      control(bot, data);
+      break;
 
     default:
       data.raw_message = `>${param ? 'enable' : 'disable'} ${setting}`;
@@ -163,7 +179,7 @@ function list(bot: Client, data: GroupMessageEventData): void {
     msg.push(groups[group_id].plugins.includes(key) ? `|○| ${key} ` : `|△| ${key} `)
   })
 
-  msg.push('如要查看更多设置可输入 >setting');
+  msg.push('如要查看更多设置可输入 setting');
   reply(msg.join('\n'));
 }
 
@@ -191,5 +207,5 @@ function activate(bot: Client): void {
 }
 
 export {
-  activate
+  activate, update
 }

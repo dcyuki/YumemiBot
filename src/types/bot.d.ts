@@ -51,3 +51,17 @@ interface IGroup {
 interface IGroups {
   [group_id: string]: IGroup
 }
+
+interface IDate {
+  time: string,
+  today: string,
+  tomorrow: string,
+  the_month: string,
+  next_month: string
+}
+
+interface IBoss {
+  bl: number[][],
+  tw: number[][],
+  jp: number[][],
+}

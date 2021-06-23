@@ -1,7 +1,7 @@
 import { Job, scheduleJob } from 'node-schedule';
 import { Client, GroupMessageEventData } from 'oicq';
 
-import { checkCommand } from '../../utils/bot';
+import { checkCommand } from '../../utils/yumemi';
 import { httpsRequest as https } from '../../utils/network';
 
 let send_job: Job;
@@ -25,10 +25,16 @@ function get(): Promise<string> {
 }
 
 // 发送一言
-async function send(data: GroupMessageEventData): Promise<void> {
+function send(data: GroupMessageEventData): void {
   const { reply } = data;
 
-  reply(await get());
+  get()
+    .then((data) => {
+      reply(data)
+    })
+    .catch((err) => {
+      reply(err)
+    })
 }
 
 // 定时发送

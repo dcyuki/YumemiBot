@@ -2,19 +2,32 @@ import { Client, GroupMessageEventData } from "oicq";
 import { scheduleJob } from "node-schedule";
 import { getProfileSync } from "../../utils/util";
 
-const word_repeat = new Map();
+const word_repeat: string[] = [];
 const word_interrupt: Map<number, Set<string>> = new Map();
 const thesaurus: { [word: string]: string[] } = getProfileSync('chat');
 
 // 12 小时清空一次词库
-scheduleJob('0 0 0/12 * * ?', () => {
-  // word_repeat.clear();
-  word_interrupt.clear();
-});
+scheduleJob('0 0 0/12 * * ?', () => word_interrupt.clear());
 
 // 复读
 function repeat(data: GroupMessageEventData) {
+  const { raw_message, reply } = data;
 
+  if (!word_repeat.includes(raw_message)) {
+    word_repeat.length = 0;
+  }
+  word_repeat.push(raw_message);
+
+  const { length } = word_repeat;
+
+  if (length > 1 && length <= 5) {
+    const probabilit: number = Math.floor(Math.random() * 100) + 1;
+
+    if (probabilit < length * 20) {
+      reply(raw_message);
+      word_repeat.length = 6;
+    }
+  }
 }
 
 // 聊天
@@ -40,7 +53,6 @@ function interrupt(data: GroupMessageEventData) {
   }
 }
 
-
 function chat(bot: Client, data: GroupMessageEventData): void {
   const { groups } = bot;
   const { group_id } = data;
@@ -49,8 +61,8 @@ function chat(bot: Client, data: GroupMessageEventData): void {
     return
   }
 
-  interrupt(data);
   repeat(data);
+  interrupt(data);
 }
 
 function activate(bot: Client): void {

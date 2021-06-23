@@ -3,16 +3,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deactivate = exports.activate = void 0;
 const node_schedule_1 = require("node-schedule");
 const util_1 = require("../../utils/util");
-const word_repeat = new Map();
+const word_repeat = [];
 const word_interrupt = new Map();
 const thesaurus = util_1.getProfileSync('chat');
 // 12 小时清空一次词库
-node_schedule_1.scheduleJob('0 0 0/12 * * ?', () => {
-    // word_repeat.clear();
-    word_interrupt.clear();
-});
+node_schedule_1.scheduleJob('0 0 0/12 * * ?', () => word_interrupt.clear());
 // 复读
 function repeat(data) {
+    const { raw_message, reply } = data;
+    if (!word_repeat.includes(raw_message)) {
+        word_repeat.length = 0;
+    }
+    word_repeat.push(raw_message);
+    const { length } = word_repeat;
+    if (length > 1 && length <= 5) {
+        const probabilit = Math.floor(Math.random() * 100) + 1;
+        if (probabilit < length * 20) {
+            reply(raw_message);
+            word_repeat.length = 6;
+        }
+    }
 }
 // 聊天
 function interrupt(data) {
@@ -38,8 +48,8 @@ function chat(bot, data) {
     if (!groups[group_id].plugins.includes('chat')) {
         return;
     }
-    interrupt(data);
     repeat(data);
+    interrupt(data);
 }
 function activate(bot) {
     bot.on("message.group", (data) => chat(bot, data));

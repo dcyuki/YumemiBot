@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deactivate = exports.activate = void 0;
-const bot_1 = require("../../utils/bot");
+const yumemi_1 = require("../../utils/yumemi");
 // 光 佬 我 要 key 
 function pcrdfans(data) {
 }
@@ -12,7 +12,7 @@ function jjc(bot, data) {
     if (!groups[group_id].plugins.includes('jjc')) {
         return;
     }
-    bot_1.checkCommand(raw_message, jjc.pcrdfans) && pcrdfans(data);
+    yumemi_1.checkCommand(raw_message, jjc.pcrdfans) && pcrdfans(data);
 }
 function activate(bot) {
     bot.on("message.group", (data) => jjc(bot, data));

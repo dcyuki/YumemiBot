@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deactivate = exports.activate = void 0;
 const node_schedule_1 = require("node-schedule");
-const bot_1 = require("../../utils/bot");
+const yumemi_1 = require("../../utils/yumemi");
 const network_1 = require("../../utils/network");
 let send_job;
 // 获取一言相关参数
@@ -21,9 +21,15 @@ function get() {
     });
 }
 // 发送一言
-async function send(data) {
+function send(data) {
     const { reply } = data;
-    reply(await get());
+    get()
+        .then((data) => {
+        reply(data);
+    })
+        .catch((err) => {
+        reply(err);
+    });
 }
 // 定时发送
 function autoSend(bot) {
@@ -47,7 +53,7 @@ function hitokoto(bot, data) {
     if (!groups[group_id].plugins.includes('hitokoto')) {
         return;
     }
-    bot_1.checkCommand(raw_message, hitokoto.send) && send(data);
+    yumemi_1.checkCommand(raw_message, hitokoto.send) && send(data);
 }
 function activate(bot) {
     autoSend(bot);

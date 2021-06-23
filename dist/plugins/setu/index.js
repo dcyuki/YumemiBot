@@ -4,7 +4,7 @@ exports.getSetuDir = exports.deactivate = exports.activate = void 0;
 const fs_1 = require("fs");
 const node_schedule_1 = require("node-schedule");
 const setu_1 = require("../../services/setu");
-const bot_1 = require("../../utils/bot");
+const yumemi_1 = require("../../utils/yumemi");
 const util_1 = require("../../utils/util");
 const network_1 = require("../../utils/network");
 // 获取涩图相关参数
@@ -130,8 +130,8 @@ function setu(bot, data) {
     if (!groups[group_id].plugins.includes('setu')) {
         return;
     }
-    bot_1.checkCommand(raw_message, setu.random) && random(bot, data);
-    bot_1.checkCommand(raw_message, setu.search) && search(bot, data);
+    yumemi_1.checkCommand(raw_message, setu.random) && random(bot, data);
+    yumemi_1.checkCommand(raw_message, setu.search) && search(bot, data);
 }
 function activate(bot) {
     bot.on("message.group", (data) => setu(bot, data));

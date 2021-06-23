@@ -1,25 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deactivate = exports.activate = void 0;
-const bot_1 = require("../../utils/bot");
-class Battle {
-    constructor(user_id, board, timeout) {
-        this.black = user_id;
-        this.white = null;
-        this._board = board;
-        this.offensive = true;
-        this.history = [];
-        this.timeout = timeout;
-    }
-    get board() {
-        return this._board;
-    }
-    set board(val) {
-        // 换手
-        this.offensive = !this.offensive;
-        this._board = val;
-    }
-}
+const yumemi_1 = require("../../utils/yumemi");
 const all_battle = new Map();
 const chess = new Set(['●', '○']);
 const reg = { x: /[a-zA-Z]/g, y: /[0-9]/g };
@@ -56,7 +38,7 @@ function start(data) {
     const timeout = setTimeout(() => {
         surrender(data, '因长时间未分出胜负');
     }, 1800000);
-    const battle = new Battle(user_id, board, timeout);
+    const battle = new yumemi_1.Battle(user_id, board, timeout);
     all_battle.set(group_id, battle);
     reply(battle.board.join('\n'));
 }
@@ -171,11 +153,11 @@ function gobang(bot, data) {
     if (!groups[group_id].plugins.includes('gobang')) {
         return;
     }
-    bot_1.checkCommand(raw_message, gobang.start) && start(data);
-    bot_1.checkCommand(raw_message, gobang.move) && move(data);
-    bot_1.checkCommand(raw_message, gobang.rollback) && rollback(data);
-    bot_1.checkCommand(raw_message, gobang.surrender) && surrender(data);
-    bot_1.checkCommand(raw_message, gobang.over) && over(data);
+    yumemi_1.checkCommand(raw_message, gobang.start) && start(data);
+    yumemi_1.checkCommand(raw_message, gobang.move) && move(data);
+    yumemi_1.checkCommand(raw_message, gobang.rollback) && rollback(data);
+    yumemi_1.checkCommand(raw_message, gobang.surrender) && surrender(data);
+    yumemi_1.checkCommand(raw_message, gobang.over) && over(data);
 }
 function activate(bot) {
     bot.on("message.group", (data) => gobang(bot, data));

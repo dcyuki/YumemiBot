@@ -1,4 +1,4 @@
-interface IBattle {
+interface IGobang {
   readonly black: number;
   readonly white: number | null;
   readonly _board: string[][];

@@ -3,8 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deactivate = exports.activate = void 0;
 const node_schedule_1 = require("node-schedule");
 const util_1 = require("../../utils/util");
-const bot_1 = require("../../utils/bot");
-let send_job;
+const yumemi_1 = require("../../utils/yumemi");
+let send_job = null;
 const dids = new Map();
 const mids = new Map([
     ['pcr_bl', 353840826],
@@ -16,7 +16,7 @@ mids.forEach(async (val, key) => {
 });
 function getDynamicId(mid) {
     return new Promise((resolve, reject) => {
-        util_1.getProfile(mid.toString(), './data/dynamic')
+        util_1.getProfile(mid.toString(), path.dynamic)
             .then(data => {
             const dynamic_id = data[0] ? data[0][0] : 0;
             resolve(dynamic_id);
@@ -41,7 +41,7 @@ function send(data) {
             msg = 'bilibili 近期动态：公主连结日服情报官_\n\n';
             break;
     }
-    util_1.getProfile(mid.toString(), './data/dynamic')
+    util_1.getProfile(mid.toString(), path.dynamic)
         .then((data) => {
         data.forEach((dynamic) => msg += `${dynamic[1]}\n\n`);
         reply(msg);
@@ -56,7 +56,7 @@ function autoSend(bot) {
         const { gl, groups } = bot;
         // 获取动态
         mids.forEach(async (val, key) => {
-            const dynamic = await util_1.getProfile(val.toString(), './data/dynamic');
+            const dynamic = await util_1.getProfile(val.toString(), path.dynamic);
             const [dynamic_id, dynamic_msg] = dynamic[0];
             if (dynamic_id === dids.get(key)) {
                 return false;
@@ -90,7 +90,7 @@ function bilibili(bot, data) {
     if (!groups[group_id].plugins.includes('bilibili')) {
         return;
     }
-    bot_1.checkCommand(raw_message, bilibili.send) && send(data);
+    yumemi_1.checkCommand(raw_message, bilibili.send) && send(data);
 }
 function activate(bot) {
     autoSend(bot);

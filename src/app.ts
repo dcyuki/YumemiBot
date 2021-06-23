@@ -4,12 +4,11 @@ import { getLogger } from 'log4js';
 import { accessSync, readdirSync } from 'fs';
 
 import { getProfileSync } from './utils/util';
-import { Bot, checkGroup } from './utils/bot';
+import { Bot, checkGroup } from './utils/yumemi';
 import { IInfo, IBot, IPlugins } from './types/bot';
 
 // 插件列表与服务列表
-// const all_serve: string[] = [];
-const all_plugin: string[] = [];
+const plugin_list: string[] = [];
 
 console.log('※ develop 分支保持着周更甚至日更，不熟悉源码甚至项目都跑步起来，除非有特殊需求，否则不建议 clone 本分支!\n');
 (() => {
@@ -28,7 +27,10 @@ console.log('※ develop 分支保持着周更甚至日更，不熟悉源码甚�
     groups: `${__yumeminame}/config/groups`,
     plugins: `${__dirname}/plugins`,
     services: `${__dirname}/services`,
-    setu: `${__yumeminame}/data/images/setu`
+    setu: `${__yumeminame}/data/images/setu`,
+    emoji: `${__yumeminame}/data/images/emoji`,
+    dynamic: `${__yumeminame}/data/dynamic`,
+    db: `${__yumeminame}/data/db`,
   }
   global.yumemi = {
     api: getProfileSync('api'),
@@ -56,9 +58,7 @@ console.log('※ develop 分支保持着周更甚至日更，不熟悉源码甚�
       // 目录是否存在 index 文件
       try {
         accessSync(`${path.plugins}/${plugin}/index.js`);
-        // /^(?!_).+/.test(plugin) ? all_plugin.push(plugin) : all_serve.push(plugin);
-        // /^(?!_).+/.test(plugin) && all_plugin.push(plugin);
-        all_plugin.push(plugin);
+        plugin_list.push(plugin);
       } catch (err) {
         yumemi.logger.warn(`${plugin} 目录下不存在 index 文件`);
       }
@@ -83,10 +83,10 @@ for (let bot_url of bot_dir) {
   bot.on("system.online", () => {
     bot.logger.mark(`正在校验配置文件...`);
     // 校验群文件
-    checkGroup(bot, all_plugin);
+    checkGroup(bot, plugin_list);
 
     // 加载插件
-    for (const plugin_name of plugins.length ? plugins : all_plugin) {
+    for (const plugin_name of plugins.length ? plugins : plugin_list) {
       const plugin: IPlugins = require(`${path.plugins}/${plugin_name}`);
 
       plugin.activate(bot);

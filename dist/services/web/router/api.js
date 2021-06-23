@@ -5,14 +5,54 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const koa_router_1 = __importDefault(require("koa-router"));
 const koa_bodyparser_1 = __importDefault(require("koa-bodyparser"));
+const util_1 = require("../../../utils/util");
 // import { getProfileSync } from "../../../utils/util";
+const sqlite_1 = __importDefault(require("../../../utils/sqlite"));
 const api = new koa_router_1.default();
+const sql = util_1.getProfileSync('sql');
+api.use(koa_bodyparser_1.default());
 api.get('/', async (ctx) => {
     ctx.body = 'api';
 });
+api.post('/battle/:action', async (ctx) => {
+    let action = null;
+    const { data } = ctx.request.body;
+    switch (ctx.params.action) {
+        case 'get_user':
+        case 'get_groups':
+        case 'get_member':
+        case 'get_now_battle':
+            action = 'get';
+            break;
+        case 'set_user':
+        case 'set_groups':
+        case 'set_member':
+        case 'set_battle':
+        case 'delete_battle':
+        case 'set_beat':
+        case 'update_battle':
+        case 'reservation':
+        case 'update_beat':
+        case 'delete_beat':
+            action = 'run';
+            break;
+        case 'get_now_beat':
+            action = 'all';
+            break;
+    }
+    action && await sqlite_1.default[action](sql[ctx.params.action], data)
+        .then((data) => {
+        ctx.status = 200;
+        ctx.body = data;
+    })
+        .catch((err) => {
+        ctx.status = 500;
+        ctx.body = err;
+        yumemi.logger.error(err);
+    });
+});
 // // const sqlite = require(`${__yumemi}/utils/sqlite`);
 // const sql = getConfigSync('sql');
-api.use(koa_bodyparser_1.default());
 // api.post('/word/:action', async ctx => {
 //   let action = null;
 //   const { params } = ctx.request.body;

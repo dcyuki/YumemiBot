@@ -1,44 +1,53 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.activate = void 0;
+exports.update = exports.activate = void 0;
 const fs_1 = require("fs");
 const os_1 = require("os");
 const setu_1 = require("../setu");
 const util_1 = require("../../utils/util");
-const bot_1 = require("../../utils/bot");
+const yumemi_1 = require("../../utils/yumemi");
 // 插件控制
 async function control(bot, data) {
     const { uin, groups } = bot;
     const { group_id, user_id, raw_message, reply } = data;
     const [action, plugin] = raw_message.split(' ');
+    const isAll = plugin === 'all';
+    const isEnable = action === '>enable';
     const plugins = groups[group_id].plugins;
     let msg = null;
     switch (true) {
-        // 有bug，待优化
-        case action === '>enable' && !bot.plugins.has(plugin):
+        case isEnable && !isAll && !bot.plugins.has(plugin):
             msg = `不存在 ${plugin} 服务，请输入合法参数`;
             break;
-        case action === '>enable' && plugins.includes(plugin):
+        case isEnable && plugins.includes(plugin):
             msg = `已启用 ${plugin} 服务，不要重复启用`;
             break;
-        case action === '>disable' && !plugins.includes(plugin):
+        case action === '>disable' && !isAll && !plugins.includes(plugin):
             msg = `没有启用 ${plugin} 服务，不要重复禁用`;
+            break;
+        case plugin === 'all':
+            plugins.length = 0;
             break;
     }
     if (msg) {
         reply(msg);
         return;
     }
-    const level = await bot_1.getLevel(bot, data);
+    const level = await yumemi_1.getLevel(bot, data);
     if (level > 2) {
-        action === '>enable' ?
-            plugins.push(plugin) :
+        isEnable ?
+            (!isAll ?
+                plugins.push(plugin) :
+                bot.plugins.forEach((val, key) => /^(?!_).+/.test(key) && plugins.push(key))) :
             plugins.splice(plugins.findIndex(item => item === plugin), 1);
         util_1.setProfile(uin.toString(), groups, path.groups)
             .then(() => {
-            action === '>enable' ?
-                reply(`plugin: {\n  "${plugin}": "deactivate  >>>  activate"\n}`) :
-                reply(`plugin: {\n  "${plugin}": "activate  >>>  deactivate"\n}`);
+            if (!isAll) {
+                reply(`plugin: {\n  "${plugin}": ${isEnable ? "deactivate  >>>  activate" : "activate  >>>  deactivate"}\n`);
+            }
+            else {
+                reply(isEnable ? '所有插件加载完毕 ♪' : '所有插件已禁用');
+            }
         })
             .catch((err) => {
             reply(err);
@@ -51,7 +60,7 @@ async function control(bot, data) {
 }
 // 更新配置文件
 async function update(bot, data) {
-    const level = await bot_1.getLevel(bot, data);
+    const level = await yumemi_1.getLevel(bot, data);
     const { uin, groups } = bot;
     const { group_id, user_id, raw_message, reply } = data;
     const [, plugin, setting, param] = raw_message.split(' ');
@@ -80,6 +89,7 @@ async function update(bot, data) {
         reply(`你当前为 level ${level} ，修改配置文件要达到 level 3 ，权限不足，请不要乱碰奇怪的开关`);
     }
 }
+exports.update = update;
 // 打印运行信息
 function state(data) {
     const { r17: { length: r17_length }, r18: { length: r18_length } } = setu_1.getSetuDir();
@@ -111,6 +121,10 @@ function sugar(bot, data) {
             data.raw_message = `>update bilibili ${setting} ${param}`;
             update(bot, data);
             break;
+        case '群服务':
+            data.raw_message = `>${param ? 'enable' : 'disable'} all`;
+            control(bot, data);
+            break;
         default:
             data.raw_message = `>${param ? 'enable' : 'disable'} ${setting}`;
             control(bot, data);
@@ -120,7 +134,7 @@ function sugar(bot, data) {
 // 退出当前群聊
 async function quit(bot, data) {
     const { group_id, user_id, reply } = data;
-    const level = await bot_1.getLevel(bot, data);
+    const level = await yumemi_1.getLevel(bot, data);
     level > 4 ?
         bot.setGroupLeave(group_id) :
         (reply(`你当前为 level ${level} ，退出群聊要达到 level 4 ，这是一个很危险的开关，你知道么`),
@@ -135,7 +149,7 @@ function list(bot, data) {
             return false;
         msg.push(groups[group_id].plugins.includes(key) ? `|○| ${key} ` : `|△| ${key} `);
     });
-    msg.push('如要查看更多设置可输入 >setting');
+    msg.push('如要查看更多设置可输入 setting');
     reply(msg.join('\n'));
 }
 function setting(bot, data) {
@@ -146,12 +160,12 @@ function setting(bot, data) {
 function terminal(bot, data) {
     const { _terminal } = yumemi.cmd;
     const { raw_message } = data;
-    bot_1.checkCommand(raw_message, _terminal.update) && update(bot, data);
-    bot_1.checkCommand(raw_message, _terminal.state) && state(data);
-    bot_1.checkCommand(raw_message, _terminal.sugar) && sugar(bot, data);
-    bot_1.checkCommand(raw_message, _terminal.control) && control(bot, data);
-    bot_1.checkCommand(raw_message, _terminal.list) && list(bot, data);
-    bot_1.checkCommand(raw_message, _terminal.setting) && setting(bot, data);
+    yumemi_1.checkCommand(raw_message, _terminal.update) && update(bot, data);
+    yumemi_1.checkCommand(raw_message, _terminal.state) && state(data);
+    yumemi_1.checkCommand(raw_message, _terminal.sugar) && sugar(bot, data);
+    yumemi_1.checkCommand(raw_message, _terminal.control) && control(bot, data);
+    yumemi_1.checkCommand(raw_message, _terminal.list) && list(bot, data);
+    yumemi_1.checkCommand(raw_message, _terminal.setting) && setting(bot, data);
 }
 function activate(bot) {
     bot.on("message.group", (data) => terminal(bot, data));

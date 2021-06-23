@@ -3,7 +3,7 @@ import { scheduleJob } from 'node-schedule';
 import { Client, GroupMessageEventData } from 'oicq';
 
 import { reload } from '../../services/setu';
-import { checkCommand } from '../../utils/bot';
+import { checkCommand } from '../../utils/yumemi';
 import { getProfileSync } from '../../utils/util';
 import { httpsRequest as https } from '../../utils/network';
 
