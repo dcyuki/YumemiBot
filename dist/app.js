@@ -24,6 +24,7 @@ console.log('※ develop 分支保持着周更甚至日更，不熟悉源码甚�
         plugins: `${__dirname}/plugins`,
         services: `${__dirname}/services`,
         setu: `${__yumeminame}/data/images/setu`,
+        rank: `${__yumeminame}/data/images/rank`,
         emoji: `${__yumeminame}/data/images/emoji`,
         dynamic: `${__yumeminame}/data/dynamic`,
         db: `${__yumeminame}/data/db`,
@@ -71,6 +72,7 @@ for (let bot_url of bot_dir) {
     bot.master = master;
     bots.set(bot_name, bot);
     bot.on("system.online", () => {
+        bot.setMaxListeners(0);
         bot.logger.mark(`正在校验配置文件...`);
         // 校验群文件
         yumemi_1.checkGroup(bot, plugin_list);

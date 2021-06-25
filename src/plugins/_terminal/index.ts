@@ -6,13 +6,23 @@ import { getSetuDir } from "../setu";
 import { setProfile } from "../../utils/util";
 import { getLevel, checkCommand } from "../../utils/yumemi";
 
+// 锁定插件
+async function lock(bot: Client, data: GroupMessageEventData) {
+  const { raw_message } = data;
+  const plugin = raw_message.slice(2).trim();
+
+  data.raw_message = `>update ${plugin} lock ${/锁定/.test(raw_message.slice(0, 2)) ? true : false}`;
+
+  update(bot, data);
+}
+
 // 插件控制
 async function control(bot: Client, data: GroupMessageEventData) {
   const { uin, groups } = bot;
   const { group_id, user_id, raw_message, reply } = data;
   const [action, plugin] = raw_message.split(' ');
 
-  const isAll = plugin === 'all';
+  const isAll: boolean = plugin === 'all';
   const isEnable = action === '>enable';
   const plugins: string[] = groups[group_id].plugins;
 
@@ -30,7 +40,7 @@ async function control(bot: Client, data: GroupMessageEventData) {
     case action === '>disable' && !isAll && !plugins.includes(plugin):
       msg = `没有启用 ${plugin} 服务，不要重复禁用`;
       break
-    case plugin === 'all':
+    case isAll:
       plugins.length = 0;
       break
   }
@@ -42,12 +52,21 @@ async function control(bot: Client, data: GroupMessageEventData) {
 
   const level = await getLevel(bot, data);
 
+  if (!isAll && level < 5 && groups[group_id].settings[plugin].lock) {
+    reply(`${plugin} 已被锁定，解锁需要达到 level 5，你当前为 Level ${level} 无法修改参数`);
+    return;
+  }
+  if (!isAll && level > 4 && groups[group_id].settings[plugin].lock) {
+    reply(`${plugin} 已被锁定，需要先解锁才能修改相关参数`);
+    return;
+  }
+  // bug: >disable all 不受 lock 影响
   if (level > 2) {
     isEnable ?
       (
         !isAll ?
           plugins.push(plugin) :
-          bot.plugins.forEach((val, key) => /^(?!_).+/.test(key) && plugins.push(key))
+          bot.plugins.forEach((val, key) => /^(?!_).+/.test(key) && !groups[group_id].settings[key].lock && plugins.push(key))
       ) :
       plugins.splice(plugins.findIndex(item => item === plugin), 1);
 
@@ -74,6 +93,7 @@ async function update(bot: Client, data: GroupMessageEventData): Promise<void> {
   const { uin, groups } = bot;
   const { group_id, user_id, raw_message, reply } = data;
   const [, plugin, setting, param] = raw_message.split(' ');
+  console.log(raw_message)
 
   const plugins: string[] = readdirSync(path.plugins);
 
@@ -200,6 +220,7 @@ function terminal(bot: Client, data: GroupMessageEventData): void {
   checkCommand(raw_message, _terminal.control) && control(bot, data);
   checkCommand(raw_message, _terminal.list) && list(bot, data);
   checkCommand(raw_message, _terminal.setting) && setting(bot, data);
+  checkCommand(raw_message, _terminal.lock) && lock(bot, data);
 }
 
 function activate(bot: Client): void {

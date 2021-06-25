@@ -6,14 +6,7 @@ _terminal:
   control: ^>(enable|disable)[\s][a-z]+$
   update: ^>update[\s][a-z]+[\s][a-z0-9]+[\s][a-z0-9]+$
   sugar: ^(开启|启用|打开|关闭|禁用)([a-z]+|r18|群服务)$
-
-_tips:
-  chat: .*
-  rank: ^(b|bl|国|t|tw|台|省|j|jp|日)服?(r|R)ank$
-  help: ^(帮助|文档|help)$
-  login: ^(登录|login)$
-  settings: ^(设置|settings)$
-  ver: ^(版本|ver|version)$
+  lock: ^(锁定|解锁)[a-z]+$
 
 aircon:
   open: ^(开|打开|启动)空调$
@@ -41,6 +34,10 @@ battle:
 bilibili:
   send: ^(国|日)服动态$
 
+chat:
+  rank: ^(b|bl|国|t|tw|台|省|j|jp|日)服?(r|R)ank$
+  help: ^(帮助|文档|help)$
+
 gobang:
   start: ^五子棋[\s]?[5-9]?$
   move: ^落子[\s]?[a-zA-Z][1-9]+[0-9]?$
@@ -60,7 +57,7 @@ jjc:
 master:
   title: ^申请头衔[\s]?.+$
 
-q&a:
+qa:
   answer: \S+
   question: ^有人(问|说)\S+你就?(回|答|说|告诉他|告诉她)\S+$
   select: ^看看有人问$

@@ -17,6 +17,7 @@ declare global {
     plugins: string;
     services: string;
     setu: string;
+    rank: string;
     emoji: string;
     dynamic: string;
     db: string;

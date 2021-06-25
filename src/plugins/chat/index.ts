@@ -1,6 +1,8 @@
 import { Client, GroupMessageEventData } from "oicq";
 import { scheduleJob } from "node-schedule";
 import { getProfileSync } from "../../utils/util";
+import { readdir } from 'fs';
+import { checkCommand } from "../../utils/yumemi";
 
 const word_repeat: string[] = [];
 const word_interrupt: Map<number, Set<string>> = new Map();
@@ -53,9 +55,51 @@ function interrupt(data: GroupMessageEventData) {
   }
 }
 
+// rank 表
+function rank(data: GroupMessageEventData) {
+  const { raw_message, reply } = data;
+  let version = raw_message.slice(0, 1);
+
+  switch (version) {
+    case 'b':
+    case '国':
+      version = 'bl';
+      break;
+    case 't':
+    case '省':
+    case '台':
+      version = 'tw';
+      break;
+    case 'j':
+    case '日':
+      version = 'jp';
+      break;
+  }
+
+  readdir(path.rank, (err, data) => {
+    if (err) return reply(err.message);
+
+    const images = [];
+
+    for (const img of data.filter(img => img.slice(0, 2) === version)) {
+      images.push(`[CQ:image,file=${path.rank}/${img}]`);
+    }
+
+    reply(`※ 表格仅供参考，升r有风险，强化需谨慎\n${images.join('\n')} `);
+  });
+}
+
+function help(data: GroupMessageEventData) {
+  const { reply } = data;
+  const { docs } = yumemi.info;
+
+  reply(`使用手册请访问：${docs} `);
+}
+
 function chat(bot: Client, data: GroupMessageEventData): void {
+  const { chat } = yumemi.cmd;
   const { groups } = bot;
-  const { group_id } = data;
+  const { group_id, raw_message } = data;
 
   if (!groups[group_id].plugins.includes('chat')) {
     return
@@ -63,6 +107,9 @@ function chat(bot: Client, data: GroupMessageEventData): void {
 
   repeat(data);
   interrupt(data);
+
+  checkCommand(raw_message, chat.rank) && rank(data);
+  checkCommand(raw_message, chat.help) && help(data);
 }
 
 function activate(bot: Client): void {

@@ -12,6 +12,56 @@ api.get('/', async ctx => {
   ctx.body = 'api';
 })
 
+api.post('/word/:action', async ctx => {
+  let action: 'get' | 'all' | 'run' | null = null;
+  const { data } = ctx.request.body as { data: any };
+
+  switch (ctx.params.action) {
+    case 'set_word':
+      action = 'run';
+      break;
+
+    case 'get_word':
+      action = 'all';
+      break;
+  }
+
+  action && await sqlite[action](sql[ctx.params.action], data)
+    .then(data => {
+      ctx.status = 200;
+      ctx.body = data;
+    })
+    .catch(err => {
+      ctx.status = 500;
+      ctx.body = err;
+
+      yumemi.logger.error(err);
+    })
+})
+
+api.post('/guess/:action', async ctx => {
+  let action: 'get' | null = null;
+  const { data } = ctx.request.body as { data: any };
+
+  switch (ctx.params.action) {
+    case 'get_unit':
+      action = 'get';
+      break;
+  }
+
+  action && await sqlite[action](sql[ctx.params.action], data)
+    .then((data: any) => {
+      ctx.status = 200;
+      ctx.body = data;
+    })
+    .catch((err: any) => {
+      ctx.status = 500;
+      ctx.body = err;
+
+      yumemi.logger.error(err);
+    })
+})
+
 api.post('/battle/:action', async ctx => {
   let action: 'get' | 'all' | 'run' | null = null;
   const { data } = ctx.request.body as { data: any };

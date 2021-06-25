@@ -8,12 +8,12 @@ package-lock.json
 # Config files
 config
 
-# Database files
+# Database file
 *.db
 
-# QQ files
+# Tencent files
 data/oicq
 
-# Setu Img files
+# Setu file
 /data/images/setu/r17/*
 /data/images/setu/r18/*

@@ -6,6 +6,13 @@ const os_1 = require("os");
 const setu_1 = require("../setu");
 const util_1 = require("../../utils/util");
 const yumemi_1 = require("../../utils/yumemi");
+// 锁定插件
+async function lock(bot, data) {
+    const { raw_message } = data;
+    const plugin = raw_message.slice(2).trim();
+    data.raw_message = `>update ${plugin} lock ${/锁定/.test(raw_message.slice(0, 2)) ? true : false}`;
+    update(bot, data);
+}
 // 插件控制
 async function control(bot, data) {
     const { uin, groups } = bot;
@@ -25,7 +32,7 @@ async function control(bot, data) {
         case action === '>disable' && !isAll && !plugins.includes(plugin):
             msg = `没有启用 ${plugin} 服务，不要重复禁用`;
             break;
-        case plugin === 'all':
+        case isAll:
             plugins.length = 0;
             break;
     }
@@ -34,11 +41,20 @@ async function control(bot, data) {
         return;
     }
     const level = await yumemi_1.getLevel(bot, data);
+    if (!isAll && level < 5 && groups[group_id].settings[plugin].lock) {
+        reply(`${plugin} 已被锁定，解锁需要达到 level 5，你当前为 Level ${level} 无法修改参数`);
+        return;
+    }
+    if (!isAll && level > 4 && groups[group_id].settings[plugin].lock) {
+        reply(`${plugin} 已被锁定，需要先解锁才能修改相关参数`);
+        return;
+    }
+    // bug: >disable all 不受 lock 影响
     if (level > 2) {
         isEnable ?
             (!isAll ?
                 plugins.push(plugin) :
-                bot.plugins.forEach((val, key) => /^(?!_).+/.test(key) && plugins.push(key))) :
+                bot.plugins.forEach((val, key) => /^(?!_).+/.test(key) && !groups[group_id].settings[key].lock && plugins.push(key))) :
             plugins.splice(plugins.findIndex(item => item === plugin), 1);
         util_1.setProfile(uin.toString(), groups, path.groups)
             .then(() => {
@@ -64,6 +80,7 @@ async function update(bot, data) {
     const { uin, groups } = bot;
     const { group_id, user_id, raw_message, reply } = data;
     const [, plugin, setting, param] = raw_message.split(' ');
+    console.log(raw_message);
     const plugins = fs_1.readdirSync(path.plugins);
     if (!plugins.includes(plugin)) {
         reply(`不存在 ${plugin} 服务模块`);
@@ -166,6 +183,7 @@ function terminal(bot, data) {
     yumemi_1.checkCommand(raw_message, _terminal.control) && control(bot, data);
     yumemi_1.checkCommand(raw_message, _terminal.list) && list(bot, data);
     yumemi_1.checkCommand(raw_message, _terminal.setting) && setting(bot, data);
+    yumemi_1.checkCommand(raw_message, _terminal.lock) && lock(bot, data);
 }
 function activate(bot) {
     bot.on("message.group", (data) => terminal(bot, data));
