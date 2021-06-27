@@ -12,6 +12,7 @@ const plugin_list: string[] = [];
 
 console.log('※ develop 分支保持着周更甚至日更，不熟悉源码甚至项目都跑步起来，除非有特殊需求，否则不建议 clone 本分支!\n');
 (() => {
+  // Acsii Font Name: Mini: http://patorjk.com/software/taag/
   const wellcome: string = `--------------------------------------------------------------------------------------------
                                                                              _         
       \\    / _  | |  _  _  ._ _   _    _|_  _    \\_/    ._ _   _  ._ _  o   |_)  _ _|_ 

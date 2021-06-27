@@ -14,6 +14,6 @@ config
 # Tencent files
 data/oicq
 
-# Setu file
+# Setu files
 /data/images/setu/r17/*
 /data/images/setu/r18/*
