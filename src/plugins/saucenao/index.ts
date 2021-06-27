@@ -1,6 +1,6 @@
 import { Client, GroupMessageEventData } from "oicq";
 
-import { checkCommand } from "../../utils/yumemi";
+import { checkCommand } from "../../utils/class";
 import { ISaucenao } from "../../types/saucenao";
 import { getProfileSync } from "../../utils/util";
 import { httpsRequest as https } from "../../utils/network";

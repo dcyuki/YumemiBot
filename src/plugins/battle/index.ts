@@ -4,7 +4,7 @@ import { getProfileSync } from '../../utils/util';
 import { httpRequest, httpsRequest } from '../../utils/network';
 import { IBoss, IDate } from '../../types/bot';
 import { Client, GroupMessageEventData, segment } from 'oicq';
-import { checkCommand, getLevel } from '../../utils/yumemi';
+import { checkCommand, getLevel } from '../../utils/class';
 
 
 const boss: IBoss = <IBoss>getProfileSync('boss');

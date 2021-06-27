@@ -1,5 +1,5 @@
 import { Client, GroupMessageEventData } from "oicq";
-import { checkCommand } from "../../utils/yumemi";
+import { checkCommand } from "../../utils/class";
 import querystring from 'querystring'
 import { httpRequest } from '../../utils/network'
 

@@ -1,6 +1,6 @@
 import { Client, GroupMessageEventData } from "oicq";
 
-import { Battle, checkCommand } from "../../utils/yumemi";
+import { Battle, checkCommand } from "../../utils/class";
 
 const all_battle: Map<number, Battle> = new Map();
 const chess: Set<string> = new Set(['●', '○']);

@@ -1,7 +1,6 @@
 import { load, dump } from 'js-yaml';
 import { writeFile, readFile, readFileSync, accessSync } from 'fs';
-
-import { IProfile } from '../types/bot';
+import { IProfile } from 'yumemi';
 
 /**
  * 更新配置文件
@@ -10,7 +9,7 @@ import { IProfile } from '../types/bot';
  * @param file_folder 文件夹路径
  * @returns Promise 对象
  */
-function setProfile(file_name: string, data: IProfile, file_folder: string = path.config): Promise<void | Error> {
+function setProfile(file_name: string, data: IProfile, file_folder: string = `${__yumeminame}/config`): Promise<void | Error> {
   return new Promise((resolve, reject) => {
     const file_path: string = `${file_folder}/${file_name}.yml`;
 
@@ -26,7 +25,7 @@ function setProfile(file_name: string, data: IProfile, file_folder: string = pat
  * @param file_folder 文件夹路径
  * @returns 返回 Promise 对象
  */
-function getProfile(file_name: string, file_folder: string = path.config): Promise<IProfile> {
+function getProfile(file_name: string, file_folder: string = `${__yumeminame}/config`): Promise<IProfile> {
   return new Promise((resolve, reject) => {
     const file_path: string = `${file_folder}/${file_name}.yml`;
 
@@ -42,7 +41,7 @@ function getProfile(file_name: string, file_folder: string = path.config): Promi
  * @param file_folder 文件夹路径
  * @returns 返回 JSON 对象
  */
-function getProfileSync(file_name: string, file_folder: string = path.config): IProfile {
+function getProfileSync(file_name: string, file_folder: string = `${__yumeminame}/config`): IProfile {
   const file_path: string = `${file_folder}/${file_name}.yml`;
 
   try {

@@ -1,5 +1,5 @@
 import { Client, GroupMessageEventData } from "oicq";
-import { checkCommand } from "../../utils/yumemi";
+import { checkCommand } from "../../utils/class";
 
 // 光 佬 我 要 key 
 function pcrdfans(data: GroupMessageEventData) {

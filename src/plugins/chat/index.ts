@@ -2,7 +2,7 @@ import { Client, GroupMessageEventData } from "oicq";
 import { scheduleJob } from "node-schedule";
 import { getProfileSync } from "../../utils/util";
 import { readdir } from 'fs';
-import { checkCommand } from "../../utils/yumemi";
+import { checkCommand } from "../../utils/class";
 
 const word_repeat: string[] = [];
 const word_interrupt: Map<number, Set<string>> = new Map();

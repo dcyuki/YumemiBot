@@ -1,4 +1,4 @@
-import { Aircon, checkCommand } from "../../utils/yumemi";
+import { Aircon, checkCommand } from "../../utils/class";
 import { Client, GroupInfo, GroupMessageEventData } from "oicq";
 
 // 房间面积（群内最大人数/平方米）

@@ -4,7 +4,7 @@ import { uptime, totalmem, freemem, version, release } from "os";
 
 import { getSetuDir } from "../setu";
 import { setProfile } from "../../utils/util";
-import { getLevel, checkCommand } from "../../utils/yumemi";
+import { getLevel, checkCommand } from "../../utils/class";
 
 // 锁定插件
 async function lock(bot: Client, data: GroupMessageEventData) {

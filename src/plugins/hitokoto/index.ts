@@ -1,7 +1,7 @@
 import { Job, scheduleJob } from 'node-schedule';
 import { Client, GroupMessageEventData } from 'oicq';
 
-import { checkCommand } from '../../utils/yumemi';
+import { checkCommand } from '../../utils/class';
 import { httpsRequest as https } from '../../utils/network';
 
 let send_job: Job;

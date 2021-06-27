@@ -1,5 +1,5 @@
 import { Client, GroupMessageEventData } from "oicq";
-import { checkCommand, getLevel } from "../../utils/yumemi";
+import { checkCommand, getLevel } from "../../utils/class";
 
 // 申请头衔
 async function title(bot: Client, data: GroupMessageEventData): Promise<void> {

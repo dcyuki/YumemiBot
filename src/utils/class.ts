@@ -1,8 +1,8 @@
 import { writeFile } from 'fs';
 import { Client, ConfBot, createClient, GroupInfo, GroupMessageEventData } from 'oicq';
+import { IGroups, IProfile } from 'yumemi';
 
 import { checkFileSync, getProfile, setProfile } from './util';
-import { IAccount, IManager, IProfile, IGroups } from '../types/bot';
 
 class Aircon {
   _enable: boolean;
@@ -78,11 +78,18 @@ class Battle implements IGobang {
   }
 }
 
-class Bot implements IAccount, IManager {
-  master: number[];
+interface IAccount {
+  readonly uin: number;
+  readonly password: string;
+  readonly config: ConfBot;
+  readonly master: number[];
+}
+
+class Bot implements IAccount {
   uin: number;
   password: string;
   config: ConfBot;
+  master: number[];
 
   constructor(master: number[], uin: number, password: string, config: ConfBot) {
     this.master = master;
@@ -159,11 +166,11 @@ async function checkGroup(bot: Client, all_plugin: string[]) {
   const { uin, logger } = bot;
 
   const plugins = all_plugin.filter(plugin => /^(?!_).+/.test(plugin));
-  const exists: boolean = checkFileSync(`${path.groups}/${uin}.yml`);
+  const exists: boolean = checkFileSync(`${__yumeminame}/config/groups/${uin}.yml`);
   const params: IProfile = await getProfile('params');
-  const groups: IGroups = exists ? await getProfile(uin.toString(), path.groups) : {};
+  const groups: IProfile = exists ? await getProfile(uin.toString(), `${__yumeminame}/config/groups`) : {};
 
-  !exists && writeFile(`${path.groups}/${uin}.yml`, '', err => err && logger.error(err));
+  !exists && writeFile(`${__yumeminame}/config/groups/${uin}.yml`, '', err => err && logger.error(err));
 
   // 获取群信息
   bot.groups = groups;
@@ -195,9 +202,10 @@ async function checkGroup(bot: Client, all_plugin: string[]) {
       // 插件信息若存在将 continue 处理
       if (settings[plugin]) continue;
 
-      settings[plugin] = {};
       // 插件 lock 默认为 false
-      settings[plugin].lock = false;
+      settings[plugin] = {
+        lock: false
+      };
 
       // 插件存在多参则写入
       if (params[plugin]) {

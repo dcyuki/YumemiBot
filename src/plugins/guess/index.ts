@@ -1,6 +1,6 @@
 import { Client, GroupMessageEventData } from "oicq";
 import { httpRequest } from "../../utils/network";
-import { checkCommand } from '../../utils/yumemi';
+import { checkCommand } from '../../utils/class';
 import sharp from 'sharp';
 
 const guess_url = `http://localhost/api/guess`;

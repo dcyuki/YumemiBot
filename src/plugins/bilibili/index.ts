@@ -2,7 +2,7 @@ import { Job, scheduleJob } from 'node-schedule';
 import { GroupMessageEventData, Client } from 'oicq';
 
 import { getProfile } from '../../utils/util';
-import { checkCommand } from '../../utils/yumemi';
+import { checkCommand } from '../../utils/class';
 
 let send_job: Job | null = null;
 
