@@ -25,6 +25,7 @@ function reload() {
         const params = `?apikey=${key}&r18=${i}&num=10&size1200=true`;
         network_1.httpsRequest.get(url, params)
             .then((res) => {
+            console.log(res);
             const { data } = res;
             logger.mark(`开始补充 r${17 + i} 涩图`);
             for (let j = 0; j < data.length; j++) {
@@ -34,7 +35,7 @@ function reload() {
                     // 文件名不能包含 \ / : * ? " < > |
                     // cq 码 url 不能包括 [ ]
                     // pid 与 title 之间使用 & 符分割，title 若出现非法字符则替换为 -
-                    const setu_url = `${path.setu}/r${17 + i}/${pid}&${title.replace(/(\\|\/|:|\*|\?|"|<|>|\||\[|\])/g, '-')}`;
+                    const setu_url = `${__yumeminame}/data/images/setu/r${17 + i}/${pid}&${title.replace(/(\\|\/|:|\*|\?|"|<|>|\||\[|\])/g, '-')}`;
                     fs_1.writeFile(setu_url, res, 'base64', (err) => {
                         !err ? logger.mark(`setu download success, ${pid} ${title}`) : logger.error(err.message);
                     });

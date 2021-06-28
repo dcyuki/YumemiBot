@@ -63,12 +63,12 @@ function rank(data) {
             version = 'jp';
             break;
     }
-    fs_1.readdir(path.rank, (err, data) => {
+    fs_1.readdir(`${__yumeminame}/data/images/rank`, (err, data) => {
         if (err)
             return reply(err.message);
         const images = [];
         for (const img of data.filter(img => img.slice(0, 2) === version)) {
-            images.push(`[CQ:image,file=${path.rank}/${img}]`);
+            images.push(`[CQ:image,file=${__yumeminame}/data/images/rank/${img}]`);
         }
         reply(`※ 表格仅供参考，升r有风险，强化需谨慎\n${images.join('\n')} `);
     });

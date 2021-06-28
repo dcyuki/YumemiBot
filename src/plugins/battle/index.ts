@@ -2,9 +2,9 @@ import querystring from 'querystring';
 
 import { getProfileSync } from '../../utils/util';
 import { httpRequest, httpsRequest } from '../../utils/network';
-import { IBoss, IDate } from '../../types/bot';
 import { Client, GroupMessageEventData, segment } from 'oicq';
 import { checkCommand, getLevel } from '../../utils/class';
+import { IBattle, IBoss, IDate } from 'yumemi';
 
 
 const boss: IBoss = <IBoss>getProfileSync('boss');

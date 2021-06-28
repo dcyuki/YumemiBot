@@ -56,7 +56,7 @@ async function control(bot, data) {
                 plugins.push(plugin) :
                 bot.plugins.forEach((val, key) => /^(?!_).+/.test(key) && !groups[group_id].settings[key].lock && plugins.push(key))) :
             plugins.splice(plugins.findIndex(item => item === plugin), 1);
-        util_1.setProfile(uin.toString(), groups, path.groups)
+        util_1.setProfile(uin.toString(), groups, `${__yumeminame}/config/groups`)
             .then(() => {
             if (!isAll) {
                 reply(`plugin: {\n  "${plugin}": ${isEnable ? "deactivate  >>>  activate" : "activate  >>>  deactivate"}\n`);
@@ -81,7 +81,7 @@ async function update(bot, data) {
     const { group_id, user_id, raw_message, reply } = data;
     const [, plugin, setting, param] = raw_message.split(' ');
     console.log(raw_message);
-    const plugins = fs_1.readdirSync(path.plugins);
+    const plugins = fs_1.readdirSync(`${__yumeminame}/plugins`);
     if (!plugins.includes(plugin)) {
         reply(`不存在 ${plugin} 服务模块`);
         return;
@@ -91,7 +91,7 @@ async function update(bot, data) {
         const old_settings = JSON.parse(JSON.stringify(settings));
         // 'false' 与 'true' 转换为 boolean false true
         settings[setting] = param === 'true' || param === 'false' ? param === 'true' : param;
-        util_1.setProfile(uin.toString(), groups, path.groups)
+        util_1.setProfile(uin.toString(), groups, `${__yumeminame}/config/groups`)
             .then(() => {
             old_settings[setting] += `  >>>  ${param}`;
             reply(`${plugin}: ${JSON.stringify(old_settings, null, 2)}`);

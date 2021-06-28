@@ -18,8 +18,8 @@ function getSetuDir() {
     const r17 = [];
     const r18 = [];
     try {
-        Object.assign(r17, fs_1.readdirSync(`${path.setu}/r17`));
-        Object.assign(r18, fs_1.readdirSync(`${path.setu}/r18`));
+        Object.assign(r17, fs_1.readdirSync(`${__yumeminame}/data/images/setu/r17`));
+        Object.assign(r18, fs_1.readdirSync(`${__yumeminame}/data/images/setu/r18`));
     }
     catch (err) {
         yumemi.logger.error(err.message);
@@ -61,10 +61,10 @@ async function random(bot, data) {
     const [pid, title] = setu_file.split('&');
     // 闪图不可与普通消息一起发出，所以此处分割放送
     reply(`[CQ:at,qq=${user_id}]\nid: ${pid}\ntitle: ${title}`);
-    reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=${path.setu}/r${17 + r18}/${setu_file}]`)
+    reply(`[CQ:image,${flash ? 'type=flash,' : ''}file=${__yumeminame}/data/images/setu/r${17 + r18}/${setu_file}]`)
         .then(() => {
         lsp.set(user_id, lsp.get(user_id) + 1);
-        fs_1.unlink(`${path.setu}/r${17 + r18}/${setu_file}`, err => {
+        fs_1.unlink(`${__yumeminame}/data/images/setu/r${17 + r18}/${setu_file}`, err => {
             logger.mark(!err ? `图片发送成功，已删除 ${setu_file}` : `文件 ${setu_file} 删除失败`);
         });
     });

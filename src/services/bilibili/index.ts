@@ -11,7 +11,7 @@ const logger = yumemi.logger;
 function updateDynamic(): void {
   mids.forEach(async (val: number, key: string) => {
     const new_dynamic: string[][] = [];
-    const old_dynamic = await getProfile(val.toString(), './data/dynamic');
+    const old_dynamic = await getProfile(val.toString(), './data/dynamic') as any;
 
     logger.mark(`正在获取 bilibili ${key} 动态...`);
 

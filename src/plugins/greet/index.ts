@@ -1,7 +1,7 @@
 import { scheduleJob } from "node-schedule";
 import { Client, GroupNoticeEventData, GroupPokeEventData, GroupTitleEventData, MemberDecreaseEventData, MemberIncreaseEventData } from "oicq";
-import { IInfo } from "../../types/bot";
-const { emoji } = path;
+import { IInfo } from "yumemi";
+const emoji= `${__yumeminame}/data/images/emoji`;
 const word_poke = [
   '喵？',
   '别摸了！要秃了!',

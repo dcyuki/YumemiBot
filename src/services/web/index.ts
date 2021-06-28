@@ -16,7 +16,7 @@ app.use(async (ctx, next) => {
 app.use(router.routes());
 
 getProfile('web')
-  .then(data => {
+  .then((data: any) => {
     const { port, domain } = data;
 
     // 在端口监听

@@ -16,8 +16,8 @@ mids.forEach(async (val, key) => {
 });
 function getDynamicId(mid) {
     return new Promise((resolve, reject) => {
-        util_1.getProfile(mid.toString(), path.dynamic)
-            .then(data => {
+        util_1.getProfile(mid.toString(), `${__yumeminame}/data/dynamic`)
+            .then((data) => {
             const dynamic_id = data[0] ? data[0][0] : 0;
             resolve(dynamic_id);
         })
@@ -41,7 +41,7 @@ function send(data) {
             msg = 'bilibili 近期动态：公主连结日服情报官_\n\n';
             break;
     }
-    util_1.getProfile(mid.toString(), path.dynamic)
+    util_1.getProfile(mid.toString(), `${__yumeminame}/data/dynamic`)
         .then((data) => {
         data.forEach((dynamic) => msg += `${dynamic[1]}\n\n`);
         reply(msg);
@@ -56,7 +56,7 @@ function autoSend(bot) {
         const { gl, groups } = bot;
         // 获取动态
         mids.forEach(async (val, key) => {
-            const dynamic = await util_1.getProfile(val.toString(), path.dynamic);
+            const dynamic = await util_1.getProfile(val.toString(), `${__yumeminame}/data/dynamic`);
             const [dynamic_id, dynamic_msg] = dynamic[0];
             if (dynamic_id === dids.get(key)) {
                 return false;

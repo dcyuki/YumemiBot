@@ -1,6 +1,34 @@
 import { Client, ConfBot } from "oicq";
 import { Logger } from 'log4js';
 
+interface IBoss {
+  bl: number[][],
+  tw: number[][],
+  jp: number[][],
+}
+
+interface IDate {
+  time: string,
+  today: string,
+  tomorrow: string,
+  the_month: string,
+  next_month: string
+}
+
+interface IBattle {
+  id: number,
+  title: string,
+  syuume: number,
+  one: number,
+  two: number,
+  three: number,
+  four: number,
+  five: number,
+  crusade: string,
+  length: number,
+  update_time: string
+}
+
 interface IGroups {
   [group_id: string]: {
     name: string;

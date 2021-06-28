@@ -19,8 +19,8 @@ mids.forEach(async (val: number, key: string) => {
 
 function getDynamicId(mid: number): Promise<number> {
   return new Promise((resolve, reject) => {
-    getProfile(mid.toString(), path.dynamic)
-      .then(data => {
+    getProfile(mid.toString(), `${__yumeminame}/data/dynamic`)
+      .then((data: any) => {
         const dynamic_id: number = data[0] ? data[0][0] : 0;
 
         resolve(dynamic_id);
@@ -49,7 +49,7 @@ function send(data: GroupMessageEventData) {
       break;
   }
 
-  getProfile(mid.toString(), path.dynamic)
+  getProfile(mid.toString(), `${__yumeminame}/data/dynamic`)
     .then((data: any) => {
       data.forEach((dynamic: [number, string]) => msg += `${dynamic[1]}\n\n`);
 
@@ -67,7 +67,7 @@ function autoSend(bot: Client): void {
 
     // 获取动态
     mids.forEach(async (val: number, key: string) => {
-      const dynamic = await getProfile(val.toString(), path.dynamic);
+      const dynamic: any = await getProfile(val.toString(), `${__yumeminame}/data/dynamic`);
       const [dynamic_id, dynamic_msg] = dynamic[0];
 
       if (dynamic_id === dids.get(key)) {
@@ -105,7 +105,7 @@ function bilibili(bot: Client, data: GroupMessageEventData): void {
   const { bilibili } = yumemi.cmd;
   const { groups } = bot;
   const { group_id, raw_message } = data;
-  
+
   if (!groups[group_id].plugins.includes('bilibili')) {
     return
   }

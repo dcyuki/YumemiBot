@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deactivate = exports.activate = void 0;
 const node_schedule_1 = require("node-schedule");
-const { emoji } = path;
+const emoji = `${__yumeminame}/data/images/emoji`;
 const word_poke = [
     '喵？',
     '别摸了！要秃了!',

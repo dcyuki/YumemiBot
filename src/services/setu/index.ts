@@ -27,6 +27,7 @@ function reload(): void {
 
     https.get(url, params)
       .then((res: any) => {
+        console.log(res)
         const { data } = res;
 
         logger.mark(`开始补充 r${17 + i} 涩图`);
@@ -39,7 +40,7 @@ function reload(): void {
               // 文件名不能包含 \ / : * ? " < > |
               // cq 码 url 不能包括 [ ]
               // pid 与 title 之间使用 & 符分割，title 若出现非法字符则替换为 -
-              const setu_url: string = `${path.setu}/r${17 + i}/${pid}&${title.replace(/(\\|\/|:|\*|\?|"|<|>|\||\[|\])/g, '-')}`;
+              const setu_url: string = `${__yumeminame}/data/images/setu/r${17 + i}/${pid}&${title.replace(/(\\|\/|:|\*|\?|"|<|>|\||\[|\])/g, '-')}`;
 
               writeFile(setu_url, res, 'base64', (err) => {
                 !err ? logger.mark(`setu download success, ${pid} ${title}`) : logger.error(err.message);

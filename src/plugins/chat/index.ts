@@ -6,7 +6,7 @@ import { checkCommand } from "../../utils/class";
 
 const word_repeat: string[] = [];
 const word_interrupt: Map<number, Set<string>> = new Map();
-const thesaurus: { [word: string]: string[] } = getProfileSync('chat');
+const thesaurus: { [word: string]: string[] } = getProfileSync('chat') as any;
 
 // 12 小时清空一次词库
 scheduleJob('0 0 0/12 * * ?', () => word_interrupt.clear());
@@ -76,13 +76,13 @@ function rank(data: GroupMessageEventData) {
       break;
   }
 
-  readdir(path.rank, (err, data) => {
+  readdir(`${__yumeminame}/data/images/rank`, (err, data) => {
     if (err) return reply(err.message);
 
     const images = [];
 
     for (const img of data.filter(img => img.slice(0, 2) === version)) {
-      images.push(`[CQ:image,file=${path.rank}/${img}]`);
+      images.push(`[CQ:image,file=${__yumeminame}/data/images/rank/${img}]`);
     }
 
     reply(`※ 表格仅供参考，升r有风险，强化需谨慎\n${images.join('\n')} `);

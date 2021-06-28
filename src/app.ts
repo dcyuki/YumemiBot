@@ -21,6 +21,7 @@ console.log('※ develop 分支保持着周更甚至日更，不熟悉源码甚�
 --------------------------------------------------------------------------------------------`;
   console.log('\x1B[36m%s\x1B[0m', wellcome);
 
+  global.__yumeminame = resolve(__dirname, '..');
   global.yumemi = {
     bots: new Map(),
     api: getProfileSync('api') as IApi,
@@ -28,7 +29,6 @@ console.log('※ develop 分支保持着周更甚至日更，不熟悉源码甚�
     info: getProfileSync('info') as IInfo,
     logger: getLogger('[yumemi bot log]') as Logger,
   }
-  global.__yumeminame = resolve(__dirname, '..');
 
   const { logger, info } = yumemi;
   const { version, released, changelogs } = info;

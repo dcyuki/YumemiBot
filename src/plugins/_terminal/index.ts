@@ -70,7 +70,7 @@ async function control(bot: Client, data: GroupMessageEventData) {
       ) :
       plugins.splice(plugins.findIndex(item => item === plugin), 1);
 
-    setProfile(uin.toString(), groups, path.groups)
+    setProfile(uin.toString(), groups, `${__yumeminame}/config/groups`)
       .then(() => {
         if (!isAll) {
           reply(`plugin: {\n  "${plugin}": ${isEnable ? "deactivate  >>>  activate" : "activate  >>>  deactivate"}\n`);
@@ -95,7 +95,7 @@ async function update(bot: Client, data: GroupMessageEventData): Promise<void> {
   const [, plugin, setting, param] = raw_message.split(' ');
   console.log(raw_message)
 
-  const plugins: string[] = readdirSync(path.plugins);
+  const plugins: string[] = readdirSync(`${__yumeminame}/plugins`);
 
   if (!plugins.includes(plugin)) {
     reply(`不存在 ${plugin} 服务模块`);
@@ -109,7 +109,7 @@ async function update(bot: Client, data: GroupMessageEventData): Promise<void> {
     // 'false' 与 'true' 转换为 boolean false true
     settings[setting] = param === 'true' || param === 'false' ? param === 'true' : param;
 
-    setProfile(uin.toString(), groups, path.groups)
+    setProfile(uin.toString(), groups, `${__yumeminame}/config/groups`)
       .then(() => {
         old_settings[setting] += `  >>>  ${param}`;
 
