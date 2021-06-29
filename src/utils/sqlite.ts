@@ -1,7 +1,7 @@
 import { verbose } from 'sqlite3';
 
 const sqlite3 = verbose();
-const db = new sqlite3.Database(`${path.db}/yumemi.db`);
+const db = new sqlite3.Database(`${__yumeminame}/data/db/yumemi.db`);
 
 db.exec('PRAGMA foreign_keys = ON');
 

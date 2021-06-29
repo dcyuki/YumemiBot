@@ -18,6 +18,16 @@ console.log('※ develop 分支保持着周更甚至日更，不熟悉源码甚�
 --------------------------------------------------------------------------------------------`;
     console.log('\x1B[36m%s\x1B[0m', wellcome);
     global.__yumeminame = path_1.resolve(__dirname, '..');
+    global.__configname = `${__yumeminame}/config`;
+    global.__groupsname = `${__configname}/groups`;
+    global.__imagesname = `${__yumeminame}/data/images`;
+    global.__setuname = `${__imagesname}/setu`;
+    global.__rankname = `${__imagesname}/rank`;
+    global.__emojiname = `${__imagesname}/emoji`;
+    global.__pluginsname = `${__dirname}/plugins`;
+    global.__servicesname = `${__dirname}/services`;
+    global.__dynamicname = `${__yumeminame}/data/dynamic`;
+    global.__dbname = `${__yumeminame}/data/db`;
     global.yumemi = {
         bots: new Map(),
         api: util_1.getProfileSync('api'),
@@ -33,17 +43,18 @@ console.log('※ develop 分支保持着周更甚至日更，不熟悉源码甚�
     logger.mark(`View Changelogs：${changelogs}`);
     logger.mark('----------');
     try {
-        const plugins = fs_1.readdirSync('./plugins');
-        const services = fs_1.readdirSync('./services');
+        const plugins = fs_1.readdirSync(__pluginsname);
+        const services = fs_1.readdirSync(__servicesname);
         // 启用服务
         for (const service of services) {
-            require(`./services/${service}`);
+            require(`${__servicesname}/${service}`);
         }
         ;
         for (const plugin of plugins) {
             // 目录是否存在 index 文件
+            const plugin_url = `${plugin}/index.js`;
             try {
-                fs_1.accessSync(`./plugins/${plugin}/index.js`);
+                fs_1.accessSync(`${__pluginsname}/${plugin_url}`);
                 plugin_list.push(plugin);
             }
             catch (err) {
@@ -65,14 +76,14 @@ for (let file_name of bot_list) {
     bot.master = master;
     bot.on("system.online", () => {
         bot.setMaxListeners(0);
-        //     bot.logger.mark(`正在校验配置文件...`);
-        //     // 校验群文件
-        //     checkGroup(bot, plugin_list);
-        //     // 加载插件
-        //     for (const plugin_name of plugins.length ? plugins : plugin_list) {
-        //       const plugin: IPlugins = require(`${path.plugins}/${plugin_name}`);
-        //       plugin.activate(bot);
-        //       bot.plugins.set(plugin_name, plugin);
-        //     }
+        bot.logger.mark(`正在校验配置文件...`);
+        // 校验群文件
+        class_1.checkGroup(bot, plugin_list);
+        // 加载插件
+        for (const plugin_name of plugins.length ? plugins : plugin_list) {
+            const plugin = require(`${__pluginsname}/${plugin_name}`);
+            plugin.activate(bot);
+            bot.plugins.set(plugin_name, plugin);
+        }
     });
 }

@@ -29,8 +29,15 @@ interface IBattle {
   update_time: string
 }
 
+interface ISetu {
+  readonly url: string;
+  readonly key: string;
+  readonly lsp: Map<number, number>;
+  readonly max_lsp: number;
+}
+
 interface IGroups {
-  [group_id: string]: {
+  [group_id: number]: {
     name: string;
     plugins: string[];
     settings: {
@@ -42,12 +49,19 @@ interface IGroups {
   }
 }
 
-// oicq Client 实例上增加 master groups plugins 属性
+interface IPlugin {
+  readonly bot: Client;
+  readonly cmd?: any;
+  readonly activate: (bot: Client) => void;
+  readonly deactivate: (bot: Client) => void;
+}
+
+// Client 实例上增加 master groups plugins 属性
 declare module 'oicq' {
   interface Client {
     master: number[];
     groups: IGroups;
-    plugins: Map<string, IPlugins>;
+    plugins: Map<string, any>;
   }
 }
 
@@ -67,7 +81,9 @@ interface IBot {
 }
 
 interface ICmd {
-  readonly [plugin: string]: any
+  readonly [plugin: string]: {
+    [string: string]: string
+  }
 }
 
 interface IInfo {
@@ -78,7 +94,7 @@ interface IInfo {
   readonly changelogs: string;
 }
 
-type IProfile = IApi | ICmd | IInfo | IGroups;
+type IProfile = IApi | ICmd | IInfo | IBot | IGroups | any;
 
 export declare global {
   var yumemi: {
@@ -90,4 +106,14 @@ export declare global {
   };
 
   var __yumeminame: string;
+  var __configname: string;
+  var __groupsname: string;
+  var __imagesname: string;
+  var __setuname: string;
+  var __rankname: string;
+  var __emojiname: string;
+  var __pluginsname: string;
+  var __servicesname: string;
+  var __dynamicname: string;
+  var __dbname: string;
 }

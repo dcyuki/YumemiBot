@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const sqlite3_1 = require("sqlite3");
 const sqlite3 = sqlite3_1.verbose();
-const db = new sqlite3.Database(`${path.db}/yumemi.db`);
+const db = new sqlite3.Database(`${__yumeminame}/data/db/yumemi.db`);
 db.exec('PRAGMA foreign_keys = ON');
 function get(sql, params) {
     return new Promise((resolve, reject) => {

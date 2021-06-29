@@ -104,7 +104,7 @@ api.post('/send/:target', async (ctx) => {
         return;
     }
     // 1 分钟同一 ip 调用 100 次直接 ban 掉
-    for (const map of bots) {
+    for (const map of yumemi.bots) {
         const bot = map[1];
         const { fl, gl } = bot;
         switch (target) {

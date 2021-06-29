@@ -26,7 +26,7 @@ Committer: ${username}
 Updated: ${timestamp}
 Link: ${url}`;
 
-      bots.forEach(bot => {
+      yumemi.bots.forEach(bot => {
         const { gl, sendGroupMsg } = bot;
 
         gl.forEach((val: any) => {
