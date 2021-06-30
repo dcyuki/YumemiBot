@@ -3,6 +3,9 @@ _terminal:
   state: ^(信息|state)$
   setting: ^(设置|setting)$
   quit: ^>quit$
+  help: ^>help$
+  bot: ^>bot$
+  shutdown: ^>shutdown$
   control: ^>(enable|disable)[\s][a-z]+$
   update: ^>update[\s][a-z]+[\s][a-z0-9]+[\s][a-z0-9]+$
   sugar: ^(开启|启用|打开|关闭|禁用)([a-z]+|r18|群服务)$
