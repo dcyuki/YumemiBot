@@ -4,7 +4,8 @@ _terminal:
   setting: ^(设置|setting)$
   quit: ^>quit$
   help: ^>help$
-  bot: ^>bot$
+  bot: ^>bot(\s(login|off|on|del)\s\d+|\shelp)?$
+  restart: ^>restart$
   shutdown: ^>shutdown$
   control: ^>(enable|disable)[\s][a-z]+$
   update: ^>update[\s][a-z]+[\s][a-z0-9]+[\s][a-z0-9]+$

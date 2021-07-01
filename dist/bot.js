@@ -5,14 +5,23 @@ const path_1 = require("path");
 const crypto_1 = require("crypto");
 const oicq_1 = require("oicq");
 const fs_1 = require("fs");
-const config_1 = require("./config");
+const util_1 = require("./util");
 const bots = new Map();
+function getBotDir() {
+    const bot_bir = new Map();
+    // 获取机器人目录
+    for (let file_name of fs_1.readdirSync('./config/bots')) {
+        const bot_name = file_name.split('.')[0];
+        bot_bir.set(bot_name, util_1.getProfileSync(bot_name, './config/bots'));
+    }
+    return bot_bir;
+}
 function linkStart() {
-    config_1.getBotDir().forEach((val, key) => {
+    getBotDir().forEach((val, key) => {
         const { qq: { uin, masters }, config } = val;
         const bot = oicq_1.createClient(uin, config);
         bot.masters = masters;
-        bots.set(key, bot);
+        bots.set(uin, bot);
         bot.logger.mark(`正在登录账号 ${key} (${uin})...`);
         bot.on("system.login.slider", function () {
             bot.logger.mark("取ticket教程：https://github.com/takayama-lily/oicq/wiki/01.滑动验证码和设备锁");

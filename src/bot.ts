@@ -1,20 +1,33 @@
 import { join } from "path"
 import { createHash } from "crypto"
 import { Client, createClient } from 'oicq';
-import { writeFileSync, readFileSync } from "fs"
+import { writeFileSync, readFileSync, readdirSync } from "fs"
 
-import { getBotDir } from './config';
+import { getProfileSync } from './util';
+import { IBot } from "./types/yumemi";
 
-const bots: Map<string, Client> = new Map();
+const bots: Map<number, Client> = new Map();
+
+function getBotDir(): Map<string, IBot> {
+  const bot_bir: Map<string, IBot> = new Map();
+
+  // 获取机器人目录
+  for (let file_name of readdirSync('./config/bots')) {
+    const bot_name: string = file_name.split('.')[0];
+
+    bot_bir.set(bot_name, getProfileSync(bot_name, './config/bots') as IBot);
+  }
+
+  return bot_bir
+}
 
 function linkStart(): void {
-
   getBotDir().forEach((val, key) => {
     const { qq: { uin, masters }, config } = val;
     const bot = createClient(uin, config);
 
     bot.masters = masters;
-    bots.set(key, bot);
+    bots.set(uin, bot);
     bot.logger.mark(`正在登录账号 ${key} (${uin})...`);
 
     bot.on("system.login.slider", function () {
@@ -63,7 +76,7 @@ function linkStart(): void {
   });
 }
 
-function getBots(): Map<string, Client> {
+function getBots(): Map<number, Client> {
   return bots;
 }
 

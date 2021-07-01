@@ -13,11 +13,11 @@ function sendMasterMsg(bot: Client, message: string) {
 }
 
 function onOnline(this: Client) {
-  sendMasterMsg(this, "此账号刚刚从掉线中恢复，现在一切正常");
+  sendMasterMsg(this, `${this.nickname} (${this.uin})已重新登录`);
 }
 
 function onOffline(this: Client, data: OfflineEventData) {
-  sendMasterMsg(this, "此账号已离线，原因为：" + data.message);
+  sendMasterMsg(this, `${this.nickname} (${this.uin})已离线，原因为：${data.message}`);
 }
 
 async function bindMasterEvents(bot: Client) {
@@ -63,6 +63,7 @@ async function bindMasterEvents(bot: Client) {
   yumemi.logger.mark(`Package Version: ${version} (Released on ${released})`);
   yumemi.logger.mark(`View Changelogs：${changelogs}`);
   yumemi.logger.mark('----------');
+  process.title = 'yumemi';
 
   linkStart();
 

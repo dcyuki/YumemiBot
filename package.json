@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
+    "node-schedule": "^2.0.0",
     "oicq": "^1.17.3"
   }
 }

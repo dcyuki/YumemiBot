@@ -1,5 +1,22 @@
+const { spawn } = require('child_process');
 const { checkCommand } = require('../../dist/util');
 const { getBots } = require('../../dist/bot');
+
+function restart(data) {
+  data.reply('正在重启程序...');
+
+  setTimeout(() => {
+    process.on('exit', () => {
+      spawn(process.argv.shift(), process.argv, {
+        cwd: process.cwd(),
+        detached: true,
+        stdio: 'inherit'
+      });
+    });
+    
+    process.exit(0);
+  }, 1000);
+}
 
 function shutdown(data) {
   data.reply('正在结束程序...');
@@ -15,7 +32,7 @@ function bot(data) {
 
   switch (action) {
     case 'login':
-
+      botLogin(data);
       break;
     case 'off':
 
@@ -52,6 +69,10 @@ function bot(data) {
       reply(msg.join('\n'));
       break;
   }
+}
+
+function botLogin(data) {
+  data.reply('咕咕咕');
 }
 
 function help(data) {
