@@ -1,7 +1,7 @@
 # bot 账号
 qq:
   # 主  人 QQ 账号
-  masters: []
+  masters: [987654321]
   # 机器人 QQ 账号
   uin: 123456789
 

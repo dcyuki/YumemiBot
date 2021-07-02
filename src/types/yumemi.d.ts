@@ -1,5 +1,5 @@
-import { Client, ConfBot } from "oicq";
 import { Logger } from 'log4js';
+import { Client, ConfBot } from "oicq";
 
 export declare global {
   var yumemi: {
@@ -9,13 +9,8 @@ export declare global {
     info: IInfo;
     logger: Logger;
   };
-}
 
-// Client 实例上增加 masters groups plugins 属性
-declare module 'oicq' {
-  interface Client {
-    masters: number[];
-  }
+  var __yumeminame: string;
 }
 
 interface IBot {
@@ -33,12 +28,6 @@ interface IApi {
   readonly webhook: { path: string, secret: string };
 }
 
-interface IBot {
-  readonly qq: { master: number[], uin: number, password: string };
-  readonly plugins: string[];
-  readonly config: ConfBot;
-}
-
 interface ICmd {
   readonly [plugin: string]: {
     [string: string]: string
@@ -52,3 +41,26 @@ interface IInfo {
   readonly docs: string;
   readonly changelogs: string;
 }
+
+interface IGroups {
+  [group_id: number]: {
+    name: string;
+    plugins: string[];
+    settings: {
+      [plugin: string]: {
+        lock: boolean;
+        [param: string]: any;
+      }
+    }
+  }
+}
+
+// Client 实例上增加 masters groups 属性
+declare module 'oicq' {
+  interface Client {
+    masters: number[];
+    groups: IGroups;
+  }
+}
+
+type Profile = IApi | IBot | ICmd | IInfo | any

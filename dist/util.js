@@ -1,8 +1,24 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkCommand = exports.getProfileSync = exports.getProfile = void 0;
+exports.checkCommand = exports.deleteFolder = exports.deleteFile = exports.getProfileSync = exports.getProfile = exports.setProfile = void 0;
 const js_yaml_1 = require("js-yaml");
 const fs_1 = require("fs");
+/**
+ * 更新配置文件
+ * @param file_name 文件名（不包括后缀）
+ * @param data 文件 yaml 对象
+ * @param file_folder 文件夹路径
+ * @returns Promise 对象
+ */
+function setProfile(file_name, data, file_folder = './config') {
+    return new Promise((resolve, reject) => {
+        const file_path = `${file_folder}/${file_name}.yml`;
+        fs_1.writeFile(file_path, js_yaml_1.dump(data), err => {
+            !err ? resolve() : reject(err);
+        });
+    });
+}
+exports.setProfile = setProfile;
 /**
  * async 获取配置文件
  * @param file_name 文件名（不包括后缀）
@@ -45,3 +61,34 @@ function checkCommand(cmd, msg) {
     return action;
 }
 exports.checkCommand = checkCommand;
+/**
+ * 删除文件
+ * @param file_url 文件路径
+ * @returns Promise 对象
+ */
+function deleteFile(file_url) {
+    return new Promise((resolve, reject) => {
+        fs_1.unlink(file_url, (err) => {
+            !err ? resolve(null) : reject(err);
+        });
+    });
+}
+exports.deleteFile = deleteFile;
+/**
+ * 删除文件夹
+ * @param folder_url 文件夹路径
+ * @returns Promise 对象
+ */
+function deleteFolder(folder_url) {
+    return new Promise(async (resolve, reject) => {
+        const files = await fs_1.promises.readdir(folder_url);
+        for (const file of files) {
+            await fs_1.promises.unlink(`${folder_url}/${file}`);
+        }
+        // 删除文件夹
+        fs_1.rmdir(folder_url, (err) => {
+            !err ? resolve(null) : reject(err);
+        });
+    });
+}
+exports.deleteFolder = deleteFolder;

@@ -1,19 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.bindMasterEvents = void 0;
 const log4js_1 = require("log4js");
-const bot_1 = require("./bot");
-const util_1 = require("./util");
 const plugin_1 = require("./plugin");
+const util_1 = require("./util");
+const bot_1 = require("./bot");
+const path_1 = require("path");
 function sendMasterMsg(bot, message) {
     const { masters } = bot;
     for (let master of masters)
         bot.sendPrivateMsg(master, "通知：\n　　" + message);
 }
 function onOnline() {
-    sendMasterMsg(this, `${this.nickname} (${this.uin})已重新登录`);
+    sendMasterMsg(this, `${this.nickname} (${this.uin}) 已重新登录`);
 }
 function onOffline(data) {
-    sendMasterMsg(this, `${this.nickname} (${this.uin})已离线，原因为：${data.message}`);
+    sendMasterMsg(this, `${this.nickname} (${this.uin}) 已离线，原因为：${data.message}`);
 }
 async function bindMasterEvents(bot) {
     bot.removeAllListeners("system.login.slider");
@@ -23,15 +25,16 @@ async function bindMasterEvents(bot) {
     bot.on("system.offline", onOffline);
     const plugins = await plugin_1.getPlugins();
     let n = 0;
-    plugins.forEach((val, key) => {
-        val.activate(bot);
+    plugins.forEach((plugin) => {
+        plugin.activate(bot);
         ++n;
     });
     setTimeout(() => {
         sendMasterMsg(bot, `启动成功，启用了 ${n} 个插件，发送 >help 可以查询相关指令`);
     }, 3000);
 }
-(() => {
+exports.bindMasterEvents = bindMasterEvents;
+(async () => {
     // Acsii Font Name: Mini: http://patorjk.com/software/taag/
     const wellcome = `--------------------------------------------------------------------------------------------
                                                                              _         
@@ -47,6 +50,7 @@ async function bindMasterEvents(bot) {
         info: util_1.getProfileSync('info'),
         logger: log4js_1.getLogger('[yumemi bot log]'),
     };
+    global.__yumeminame = path_1.resolve(__dirname, '..');
     const { version, released, changelogs } = yumemi.info;
     yumemi.logger.level = 'all';
     yumemi.logger.mark('----------');
@@ -54,8 +58,8 @@ async function bindMasterEvents(bot) {
     yumemi.logger.mark(`View Changelogs：${changelogs}`);
     yumemi.logger.mark('----------');
     process.title = 'yumemi';
-    bot_1.linkStart();
-    bot_1.getBots().forEach((bot, bot_name) => {
+    const bots = bot_1.linkStart();
+    bots.forEach((bot) => {
         bot.on("system.online", () => {
             bindMasterEvents(bot);
         });

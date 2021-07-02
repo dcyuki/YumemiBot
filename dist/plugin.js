@@ -11,7 +11,7 @@ const plugins = new Map();
             plugins.set(plugin, require(`../plugins/${plugin}`));
         }
         catch (err) {
-            yumemi.logger.warn(`${plugin} 目录下不存在 index 文件`);
+            yumemi.logger.warn(err);
         }
     }
 })();

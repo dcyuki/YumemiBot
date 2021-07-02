@@ -1,10 +1,11 @@
-import { Client, ConfBot, OfflineEventData, PrivateMessageEventData } from 'oicq';
 import { getLogger } from 'log4js';
+import { Client, ConfBot, OfflineEventData, PrivateMessageEventData } from 'oicq';
 
-import { getBots, linkStart } from './bot';
-import { getProfileSync } from './util';
-import { IApi, ICmd, IInfo } from './types/yumemi';
 import { getPlugins } from './plugin';
+import { getProfileSync } from './util';
+import { getBots, linkStart } from './bot';
+import { IApi, ICmd, IInfo } from './types/yumemi';
+import { resolve } from 'path';
 
 function sendMasterMsg(bot: Client, message: string) {
   const { masters } = bot;
@@ -13,11 +14,11 @@ function sendMasterMsg(bot: Client, message: string) {
 }
 
 function onOnline(this: Client) {
-  sendMasterMsg(this, `${this.nickname} (${this.uin})已重新登录`);
+  sendMasterMsg(this, `${this.nickname} (${this.uin}) 已重新登录`);
 }
 
 function onOffline(this: Client, data: OfflineEventData) {
-  sendMasterMsg(this, `${this.nickname} (${this.uin})已离线，原因为：${data.message}`);
+  sendMasterMsg(this, `${this.nickname} (${this.uin}) 已离线，原因为：${data.message}`);
 }
 
 async function bindMasterEvents(bot: Client) {
@@ -28,17 +29,19 @@ async function bindMasterEvents(bot: Client) {
   bot.on("system.offline", onOffline);
 
   const plugins = await getPlugins();
-  let n = 0
-  plugins.forEach((val, key) => {
-    val.activate(bot);
-    ++n
-  })
+  let num = 0;
+
+  plugins.forEach((plugin) => {
+    plugin.activate(bot);
+    ++num;
+  });
+
   setTimeout(() => {
-    sendMasterMsg(bot, `启动成功，启用了 ${n} 个插件，发送 >help 可以查询相关指令`);
+    sendMasterMsg(bot, `启动成功，启用了 ${num} 个插件，发送 >help 可以查询相关指令`);
   }, 3000);
 }
 
-(() => {
+(async () => {
   // Acsii Font Name: Mini: http://patorjk.com/software/taag/
   const wellcome: string = `--------------------------------------------------------------------------------------------
                                                                              _         
@@ -55,6 +58,7 @@ async function bindMasterEvents(bot: Client) {
     info: getProfileSync('info') as IInfo,
     logger: getLogger('[yumemi bot log]'),
   }
+  global.__yumeminame = resolve(__dirname, '..');
 
   const { version, released, changelogs } = yumemi.info;
 
@@ -65,11 +69,15 @@ async function bindMasterEvents(bot: Client) {
   yumemi.logger.mark('----------');
   process.title = 'yumemi';
 
-  linkStart();
+  const bots = linkStart();
 
-  getBots().forEach((bot, bot_name) => {
+  bots.forEach((bot: Client) => {
     bot.on("system.online", () => {
       bindMasterEvents(bot);
     });
   });
 })();
+
+export {
+  bindMasterEvents
+}
