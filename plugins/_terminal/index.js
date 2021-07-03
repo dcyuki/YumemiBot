@@ -36,10 +36,8 @@ function help(data) {
 }
 
 function listener(data) {
-  const { cmd } = global.yumemi;
   const { raw_message } = data;
-
-  const action = checkCommand(cmd._terminal, raw_message);
+  const action = checkCommand('_terminal', raw_message);
 
   action && eval(`${action}(data, this)`);
 }

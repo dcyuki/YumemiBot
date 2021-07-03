@@ -2,8 +2,6 @@ import { Client } from 'oicq';
 import { promises, accessSync } from 'fs';
 
 interface IPlugin {
-  readonly bot: Client;
-  readonly cmd?: any;
   readonly activate: (bot: Client) => void;
   readonly deactivate: (bot: Client) => void;
 }

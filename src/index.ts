@@ -2,8 +2,8 @@ import { getLogger } from 'log4js';
 import { Client, ConfBot, OfflineEventData, PrivateMessageEventData } from 'oicq';
 
 import { getPlugins } from './plugin';
-import { getProfileSync } from './util';
-import { getBots, linkStart } from './bot';
+import { checkGroup, getProfileSync } from './util';
+import { linkStart } from './bot';
 import { IApi, ICmd, IInfo } from './types/yumemi';
 import { resolve } from 'path';
 
@@ -28,17 +28,21 @@ async function bindMasterEvents(bot: Client) {
   bot.on("system.online", onOnline);
   bot.on("system.offline", onOffline);
 
-  const plugins = await getPlugins();
+  const plugins = getPlugins();
+  const plugin_list: string[] = [];
   let num = 0;
 
-  plugins.forEach((plugin) => {
+  plugins.forEach((plugin, key) => {
     plugin.activate(bot);
+    plugin_list.push(key)
     ++num;
   });
 
+  await checkGroup(bot, plugin_list);
+
   setTimeout(() => {
     sendMasterMsg(bot, `启动成功，启用了 ${num} 个插件，发送 >help 可以查询相关指令`);
-  }, 3000);
+  }, 1000);
 }
 
 (async () => {

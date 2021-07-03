@@ -23,15 +23,18 @@ async function bindMasterEvents(bot) {
     bot.removeAllListeners("system.login.error");
     bot.on("system.online", onOnline);
     bot.on("system.offline", onOffline);
-    const plugins = await plugin_1.getPlugins();
-    let n = 0;
-    plugins.forEach((plugin) => {
+    const plugins = plugin_1.getPlugins();
+    const plugin_list = [];
+    let num = 0;
+    plugins.forEach((plugin, key) => {
         plugin.activate(bot);
-        ++n;
+        plugin_list.push(key);
+        ++num;
     });
+    await util_1.checkGroup(bot, plugin_list);
     setTimeout(() => {
-        sendMasterMsg(bot, `启动成功，启用了 ${n} 个插件，发送 >help 可以查询相关指令`);
-    }, 3000);
+        sendMasterMsg(bot, `启动成功，启用了 ${num} 个插件，发送 >help 可以查询相关指令`);
+    }, 1000);
 }
 exports.bindMasterEvents = bindMasterEvents;
 (async () => {

@@ -1,6 +1,10 @@
+import http from 'http';
+import https from 'https';
 import { load, dump } from 'js-yaml';
-import { readFile, readFileSync, unlink, writeFile, promises, rmdir } from 'fs';
-import { Profile } from './types/yumemi';
+import { readFile, readFileSync, unlink, writeFile, promises, rmdir, accessSync } from 'fs';
+import { IGroups, Profile } from './types/yumemi';
+import { Client, GroupInfo } from 'oicq';
+
 
 /**
  * 更新配置文件
@@ -25,7 +29,7 @@ function setProfile(file_name: string, data: Profile, file_folder: string = './c
  * @param file_folder 文件夹路径
  * @returns 返回 Promise 对象
  */
-function getProfile(file_name: string, file_folder: string = './config') {
+function getProfile(file_name: string, file_folder: string = './config'): Promise<Profile> {
   return new Promise((resolve, reject) => {
     const file_path: string = `${file_folder}/${file_name}.yml`;
 
@@ -41,7 +45,7 @@ function getProfile(file_name: string, file_folder: string = './config') {
  * @param file_folder 文件夹路径
  * @returns 返回 JSON 对象
  */
-function getProfileSync(file_name: string, file_folder: string = './config') {
+function getProfileSync(file_name: string, file_folder: string = './config'): Profile {
   const file_path: string = `${file_folder}/${file_name}.yml`;
 
   try {
@@ -51,9 +55,9 @@ function getProfileSync(file_name: string, file_folder: string = './config') {
   }
 }
 
-function checkCommand(cmd: { [fnc: string]: string }, msg: string): string {
+function checkCommand(plugin_name: string, msg: string): string {
   let action = '';
-
+  const cmd = yumemi.cmd[plugin_name]
   for (const fnc in cmd) {
     if (new RegExp(cmd[fnc]).test(msg)) {
       action = fnc;
@@ -97,8 +101,309 @@ function deleteFolder(folder_url: string) {
   })
 }
 
+function httpNetwork(method: 'GET' | 'POST', url: string, params: string = ''): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Length': Buffer.byteLength(params)
+    }
+    const options = {
+      method,
+      headers
+    }
+    const req: http.ClientRequest = http.request(url, options, (res) => {
+      let err = null;
+      const contentType: string = <string>res.headers['content-type'];
+
+      // 任何 2xx 状态码都表示成功的响应
+      if (Math.floor(<number>res.statusCode / 100) !== 2) err = new Error(`请求失败，状态码: ${res.statusCode}`);
+
+      if (err) {
+        // 释放内存
+        res.resume();
+        reject(err)
+      }
+
+      switch (contentType) {
+        case 'image/jpeg':
+        case 'image/png':
+        case 'image/jpg':
+          res.setEncoding('base64');
+          break;
+        default:
+          res.setEncoding('utf8');
+          //   err = new Error(`无效的 content-type ，接收到的是 ${contentType}`);
+          break;
+      }
+
+      let raw_data: any = '';
+
+      res.on('data', (chunk: any) => { raw_data += chunk; });
+      res.on('end', () => {
+        // 若 data 为 json 则转换
+        if (/^application\/json/.test(contentType)) {
+          raw_data = JSON.parse(raw_data);
+        }
+
+        resolve(raw_data)
+      });
+    }).on('error', (err: Error) => {
+      reject(err);
+    }).on('timeout', () => {
+      reject(`Timeout: ${url}`);
+    });
+
+    // 将数据写入请求 body
+    req.write(params);
+    // 使用 request() 时，必须始终调用 req.end() 来表示请求的结束
+    req.end();
+  })
+}
+
+function httpsNetwork(method: 'GET' | 'POST', url: string, params: string = ''): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Length': Buffer.byteLength(params)
+    }
+    const options = {
+      method,
+      headers
+    }
+    const req: http.ClientRequest = https.request(url, options, (res) => {
+      let err = null;
+      const contentType: string = <string>res.headers['content-type'];
+
+      // 任何 2xx 状态码都表示成功的响应
+      if (Math.floor(<number>res.statusCode / 100) !== 2) err = new Error(`请求失败，状态码: ${res.statusCode}`);
+
+      if (err) {
+        // 释放内存
+        res.resume();
+        reject(err);
+      }
+
+      switch (contentType) {
+        case 'image/jpeg':
+        case 'image/png':
+        case 'image/jpg':
+          res.setEncoding('base64');
+          break;
+        default:
+          res.setEncoding('utf8');
+          //   err = new Error(`无效的 content-type ，接收到的是 ${contentType}`);
+          break;
+      }
+
+      let raw_data: any = '';
+
+      res.on('data', (chunk: any) => { raw_data += chunk; });
+      res.on('end', () => {
+        // 若 data 为 json 则转换
+        if (/^application\/json/.test(contentType)) {
+          raw_data = JSON.parse(raw_data);
+        }
+
+        resolve(raw_data)
+      });
+    }).on('error', (err: Error) => {
+      reject(err);
+    }).on('timeout', () => {
+      reject(`Timeout: ${url}`);
+    });
+
+    // 将数据写入请求 body
+    req.write(params);
+    // 使用 request() 时，必须始终调用 req.end() 来表示请求的结束
+    req.end();
+  })
+}
+
+/**
+ * http 网络请求
+ */
+const httpRequest = {
+  /**
+   * 发起 http get 请求
+   * @param url 网络请求 url
+   * @param params url 参数
+   */
+  get: (url: string, params: string = ''): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      httpNetwork('GET', `${url}${params}`)
+        .then(res => {
+          resolve(res)
+        })
+        .catch(err => {
+          reject(err);
+        })
+    })
+  },
+
+  /**
+   * 发起 http post 请求
+   * @param url 网络请求 url
+   * @param params post 参数
+   */
+  post: (url: string, params: string | undefined): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      httpNetwork('POST', url, params)
+        .then(res => {
+          resolve(res)
+        })
+        .catch(err => {
+          reject(err);
+        })
+    })
+  }
+
+}
+
+/**
+ * https 网络请求
+ */
+const httpsRequest = {
+  /**
+   * 发起 https get 请求
+   * @param url 网络请求 url
+   * @param params url 参数
+   */
+  get: (url: string, params: string = ''): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      httpsNetwork('GET', `${url}${params}`)
+        .then(res => {
+          resolve(res)
+        })
+        .catch(err => {
+          reject(err);
+        })
+    })
+  },
+
+  /**
+   * 发起 https post 请求
+   * @param url 网络请求 url
+   * @param params post 参数
+   */
+  post: (url: string, params: string | undefined): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      httpsNetwork('POST', url, params)
+        .then(res => {
+          resolve(res)
+        })
+        .catch(err => {
+          reject(err);
+        })
+    })
+  }
+}
+
+/**
+ * 检测文件是否存在
+ * @param path 文件路径
+ * @returns Promise<boolean>
+ */
+function checkFile(path: string): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    promises.access(path)
+      .then(() => {
+        resolve(true)
+      })
+      .catch(() => {
+        reject(false)
+      })
+  })
+}
+
+/**
+ * 检测文件是否存在
+ * @param path 文件路径
+ * @returns boolean
+ */
+function checkFileSync(path: string): boolean {
+  try {
+    accessSync(path);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+/**
+ * 校验 groups
+ * @param bot 机器人实例
+ * @param plugin_list 机器人插件列表
+ */
+async function checkGroup(bot: Client, plugin_list: string[]) {
+  let update = false;
+
+  const { uin, logger } = bot;
+
+  const plugins = plugin_list.filter(plugin => /^(?!_).+/.test(plugin));
+  const exists: boolean = await checkFile(`./config/groups/${uin}.yml`);
+  const params: Profile = await getProfile('params');
+  const groups: IGroups = exists ? await getProfile(uin.toString(), './config/groups') : {};
+
+  !exists && writeFile(`./config/groups/${uin}.yml`, '', err => err && logger.error(err));
+
+  // 获取群信息
+  bot.groups = groups;
+  bot.gl.forEach((val: GroupInfo) => {
+    const { group_id, group_name } = val;
+    const { [group_id]: group } = groups;
+
+    // 群信息存在并且插件设置键值对相同则 continue
+    if (group && Object.keys(group.settings).length === plugins.length) return true;
+    // 防止重复赋值
+    if (!update) update = true;
+    // 文件存在，校验数据是否更新
+    if (group) {
+      logger.info(`你可能添加了新的插件，正在更新群聊「${group_name} (${group_id})」配置文件...`);
+    } else {
+      logger.info(`检测到群聊 「${group_name} (${group_id})」 未初始化信息，正在写入数据...`);
+
+      groups[group_id] = {
+        name: group_name,
+        plugins: [],
+        settings: {},
+      };
+    }
+
+    // 写入插件配置
+    const settings = groups[group_id].settings;
+
+    for (const plugin of plugins) {
+      // 插件信息若存在将 continue 处理
+      if (settings[plugin]) continue;
+
+      // 插件 lock 默认为 false
+      settings[plugin] = {
+        lock: false
+      };
+
+      // 插件存在多参则写入
+      if (params[plugin]) {
+        for (const param in params[plugin]) settings[plugin][param] = params[plugin][param];
+      }
+    }
+  });
+
+  if (update) {
+    await setProfile(uin.toString(), groups, './config/groups')
+      .then(() => {
+        logger.mark(`已更新 ${uin}.yml 配置文件 ♪`);
+      })
+      .catch(err => {
+        logger.error(err);
+      })
+  } else {
+    logger.mark(`校验完毕，${uin}.yml 无需更新 ♪`);
+  }
+}
+
 export {
   setProfile, getProfile, getProfileSync,
   deleteFile, deleteFolder,
-  checkCommand
+  httpRequest, httpsRequest,
+  checkCommand, checkGroup
 }
