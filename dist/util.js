@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkGroup = exports.checkCommand = exports.httpsRequest = exports.httpRequest = exports.deleteFolder = exports.deleteFile = exports.getProfileSync = exports.getProfile = exports.setProfile = void 0;
+exports.getLevel = exports.checkGroup = exports.checkCommand = exports.httpsRequest = exports.httpRequest = exports.deleteFolder = exports.deleteFile = exports.getProfileSync = exports.getProfile = exports.setProfile = void 0;
 const http_1 = __importDefault(require("http"));
 const https_1 = __importDefault(require("https"));
 const js_yaml_1 = require("js-yaml");
@@ -375,3 +375,21 @@ async function checkGroup(bot, plugin_list) {
     }
 }
 exports.checkGroup = checkGroup;
+/**
+ * level 0 群成员
+ * level 1 群成员
+ * level 2 群成员
+ * level 3 管  理
+ * level 4 群  主
+ * level 5 主  人
+ * level 6 维护组
+ */
+function getLevel(data, bot) {
+    return new Promise((resolve, reject) => {
+        const { admin } = yumemi.info;
+        const { masters } = bot;
+        const { user_id, sender: { level, role } } = data;
+        resolve(!admin.includes(user_id) ? (!masters.includes(user_id) ? (role === 'member' ? (level <= 4 ? (level <= 2 ? 0 : 1) : 2) : (role === 'admin' ? 3 : 4)) : 5) : 6);
+    });
+}
+exports.getLevel = getLevel;

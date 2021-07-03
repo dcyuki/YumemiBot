@@ -3,7 +3,7 @@ import https from 'https';
 import { load, dump } from 'js-yaml';
 import { readFile, readFileSync, unlink, writeFile, promises, rmdir, accessSync } from 'fs';
 import { IGroups, Profile } from './types/yumemi';
-import { Client, GroupInfo } from 'oicq';
+import { Client, GroupInfo, GroupMessageEventData } from 'oicq';
 
 
 /**
@@ -401,9 +401,29 @@ async function checkGroup(bot: Client, plugin_list: string[]) {
   }
 }
 
+/**
+ * level 0 群成员
+ * level 1 群成员
+ * level 2 群成员
+ * level 3 管  理
+ * level 4 群  主
+ * level 5 主  人
+ * level 6 维护组
+ */
+function getLevel(data: GroupMessageEventData, bot: Client): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const { admin } = yumemi.info;
+    const { masters } = bot;
+    const { user_id, sender: { level, role } } = data;
+
+    resolve(!admin.includes(user_id) ? (!masters.includes(user_id) ? (role === 'member' ? (level <= 4 ? (level <= 2 ? 0 : 1) : 2) : (role === 'admin' ? 3 : 4)) : 5) : 6);
+  })
+}
+
 export {
   setProfile, getProfile, getProfileSync,
   deleteFile, deleteFolder,
   httpRequest, httpsRequest,
-  checkCommand, checkGroup
+  checkCommand, checkGroup,
+  getLevel
 }

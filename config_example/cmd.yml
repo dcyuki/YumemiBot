@@ -57,7 +57,7 @@ hitokoto:
   send: ^(来|说)(点|句|段)骚话$
 
 jjc:
-  pcrdfans: ^(t|tw|台|b|bili|bl|国|j|jp|日)jjc.*
+  pcrdfans: ^jjc$
 
 master:
   title: ^申请头衔[\s]?.+$

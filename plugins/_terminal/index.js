@@ -25,7 +25,7 @@ function shutdown(data) {
   getBots().forEach((bot) => {
     bot.logout();
   });
-  
+
   setTimeout(() => {
     process.exit(0);
   }, 1000);

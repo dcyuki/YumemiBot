@@ -59,6 +59,6 @@ module.exports = async () => {
       });
   }
 
-  logger.info(`r17 :${r17_length} ，r18 ${r18_length} ， ${r17_length < max_setu ? 'r17, ' : ''}${r18_length < max_setu ? 'r18' : ''} 数量不足 ${max_setu}，开始补充库存...`)
+  logger.info(`r17 :${r17_length} ，r18 ${r18_length} ， ${r17_length < max_setu ? 'r17 ' : ''}${r18_length < max_setu ? 'r18' : ''} 数量不足 ${max_setu}，开始补充库存...`)
 }
 
