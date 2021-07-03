@@ -1,3 +1,6 @@
+hitokoto:
+  autoSend: true
+
 setu:
   r18: false
   flash: true
