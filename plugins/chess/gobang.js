@@ -167,7 +167,7 @@ function rollback(data) {
   }
 
   if (battle.history.length < 1) {
-    return reply(`[CQ:at,qq=${user_id}] 当前对局没有历史记录`);
+    return reply(`[CQ:at,qq=${user_id}] 当前对局没有落子历史记录`);
   }
 
   const [x, y] = history[history.length - 1];
@@ -192,4 +192,8 @@ function over(data) {
   const { sender: { nickname, card } } = data;
 
   surrender(data, `${card ? card : nickname} 中止了对局`);
+}
+
+module.exports = {
+  start, move, rollback, surrender, over
 }

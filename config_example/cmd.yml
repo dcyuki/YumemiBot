@@ -39,11 +39,13 @@ battle:
 bilibili:
   send: ^(国|日)服动态$
 
-chat:
+dialog:
   rank: ^(b|bl|国|t|tw|台|省|j|jp|日)服?(r|R)ank$
   help: ^(帮助|文档|help)$
+  repeat: .+
+  chat: .+
 
-gobang:
+chess:
   start: ^五子棋[\s]?[5-9]?$
   move: ^落子[\s]?[a-zA-Z][1-9]+[0-9]?$
   rollback: ^悔棋$
