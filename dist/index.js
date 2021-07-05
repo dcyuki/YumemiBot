@@ -33,7 +33,7 @@ async function bindMasterEvents(bot) {
     });
     await util_1.checkGroup(bot, plugin_list);
     setTimeout(() => {
-        sendMasterMsg(bot, `启动成功，启用了 ${num} 个插件，发送 >help 可以查询相关指令`);
+        sendMasterMsg(bot, `启动成功，启用了 ${num} 个插件，发送 help 可以查看相关文档`);
     }, 1000);
 }
 exports.bindMasterEvents = bindMasterEvents;
