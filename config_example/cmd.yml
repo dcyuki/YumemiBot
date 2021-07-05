@@ -3,7 +3,6 @@ _terminal:
   state: ^(信息|state)$
   setting: ^(设置|setting)$
   quit: ^>quit$
-  help: ^>help$
   bot: ^>bot(\s(add|off|on|del)\s\d+|\shelp)?$
   restart: ^>restart$
   shutdown: ^>shutdown$
@@ -42,8 +41,6 @@ bilibili:
 dialog:
   rank: ^(b|bl|国|t|tw|台|省|j|jp|日)服?(r|R)ank$
   help: ^(帮助|文档|help)$
-  repeat: .+
-  chat: .+
 
 chess:
   start: ^五子棋[\s]?[5-9]?$
@@ -53,7 +50,7 @@ chess:
   over: ^(结束|中止)对局$
 
 guess:
-  avatar: (^猜头像$|\S+)
+  avatar: ^猜头像$
 
 hitokoto:
   send: ^(来|说)(点|句|段)骚话$
@@ -70,7 +67,7 @@ qa:
   select: ^看看有人问$
 
 saucenao:
-  search: ^(搜图|\[CQ:image,file=.+,url=.+\])$
+  search: ^搜图$
 
 setu:
   random: ^来[点张份][涩瑟色]图$

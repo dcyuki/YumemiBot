@@ -14,11 +14,17 @@
   "license": "GPL",
   "devDependencies": {
     "@types/js-yaml": "^4.0.1",
-    "@types/node": "^15.12.5"
+    "@types/node": "^15.12.5",
+    "@types/sqlite3": "^3.1.7"
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
+    "koa": "^2.13.1",
+    "koa-bodyparser": "^4.3.0",
+    "koa-router": "^10.0.0",
     "node-schedule": "^2.0.0",
-    "oicq": "^1.17.3"
+    "oicq": "^1.17.3",
+    "sharp": "^0.28.3",
+    "sqlite3": "^5.0.2"
   }
 }

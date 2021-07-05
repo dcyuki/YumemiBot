@@ -31,10 +31,6 @@ function shutdown(data) {
   }, 1000);
 }
 
-function help(data) {
-  data.reply('项目重构中，目前仅有最基础的账号登录管理可用，发送 >bot help 查看')
-}
-
 function listener(data) {
   const { raw_message } = data;
   const action = checkCommand('_terminal', raw_message);

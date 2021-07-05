@@ -61,6 +61,7 @@ exports.bindMasterEvents = bindMasterEvents;
     yumemi.logger.mark(`View Changelogs：${changelogs}`);
     yumemi.logger.mark('----------');
     process.title = 'yumemi';
+    require('../services/web');
     const bots = bot_1.linkStart();
     bots.forEach((bot) => {
         bot.on("system.online", () => {
