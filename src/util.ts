@@ -311,16 +311,17 @@ const httpsRequest = {
  * @param path 文件路径
  * @returns Promise<boolean>
  */
-function checkFile(path: string): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    promises.access(path)
-      .then(() => {
-        resolve(true)
-      })
-      .catch(() => {
-        reject(false)
-      })
-  })
+async function checkFile(path: string): Promise<boolean> {
+  let exists = false;
+
+  await promises.access(path)
+    .then(() => {
+      exists = true;
+    })
+    .catch(() => {
+      exists = false;
+    })
+  return exists
 }
 
 /**

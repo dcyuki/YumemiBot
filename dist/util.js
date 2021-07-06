@@ -290,16 +290,16 @@ exports.httpsRequest = httpsRequest;
  * @param path 文件路径
  * @returns Promise<boolean>
  */
-function checkFile(path) {
-    return new Promise((resolve, reject) => {
-        fs_1.promises.access(path)
-            .then(() => {
-            resolve(true);
-        })
-            .catch(() => {
-            reject(false);
-        });
+async function checkFile(path) {
+    let exists = false;
+    await fs_1.promises.access(path)
+        .then(() => {
+        exists = true;
+    })
+        .catch(() => {
+        exists = false;
     });
+    return exists;
 }
 /**
  * 检测文件是否存在
