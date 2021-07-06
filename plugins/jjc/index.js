@@ -6,8 +6,7 @@ function pcrdfans(data, bot) {
 }
 
 function listener(data) {
-  const { raw_message } = data;
-  const action = checkCommand('jjc', raw_message);
+  const action = checkCommand('jjc', data, this);
 
   action && eval(`${action}(data, this)`);
 }

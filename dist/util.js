@@ -8,6 +8,7 @@ const http_1 = __importDefault(require("http"));
 const https_1 = __importDefault(require("https"));
 const js_yaml_1 = require("js-yaml");
 const fs_1 = require("fs");
+const plugin_1 = require("./plugin");
 /**
  * 更新配置文件
  * @param file_name 文件名（不包括后缀）
@@ -55,14 +56,20 @@ function getProfileSync(file_name, file_folder = './config') {
     }
 }
 exports.getProfileSync = getProfileSync;
-function checkCommand(plugin_name, msg) {
+function checkCommand(plugin_name, data, bot) {
     let action = '';
     const cmd = yumemi.cmd[plugin_name];
+    const { groups } = bot;
+    const { group_id } = data;
     for (const fnc in cmd) {
-        if (new RegExp(cmd[fnc]).test(msg)) {
+        if (new RegExp(cmd[fnc]).test(data.raw_message)) {
             action = fnc;
             break;
         }
+    }
+    if (action && plugin_1.getPlugins().has(plugin_name) && /^(?!_).+/.test(plugin_name) && !groups[group_id].plugins.includes(plugin_name)) {
+        action = '';
+        data.reply(`${plugin_name} 服务未启用`);
     }
     return action;
 }

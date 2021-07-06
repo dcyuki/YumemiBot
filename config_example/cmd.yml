@@ -8,8 +8,8 @@ _terminal:
   shutdown: ^>shutdown$
   control: ^>(enable|disable)[\s][a-z]+$
   update: ^>update[\s][a-z]+[\s][a-z0-9]+[\s][a-z0-9]+$
-  sugar: ^(开启|启用|打开|关闭|禁用)([a-z]+|r18|群服务)$
-  lock: ^(锁定|解锁)[a-z]+$
+  sugar: ^(开启|启用|打开|关闭|禁用)\s?([a-z]+|r18|群服务|pcr.+)$
+  lock: ^(锁定|解锁)\s?[a-z]+$
 
 aircon:
   open: ^(开|打开|启动)空调$
@@ -62,7 +62,6 @@ master:
   title: ^申请头衔[\s]?.+$
 
 qa:
-  answer: \S+
   question: ^有人(问|说)\S+你就?(回|答|说|告诉他|告诉她)\S+$
   select: ^看看有人问$
 

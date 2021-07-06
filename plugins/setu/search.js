@@ -14,7 +14,7 @@ module.exports = async (data, bot) => {
 
   httpsRequest.get(url, params)
     .then((res) => {
-      const { code, msg, data } = res;
+      const { code, msg } = res;
 
       switch (code) {
         case -1:
@@ -22,7 +22,7 @@ module.exports = async (data, bot) => {
           break;
 
         case 0:
-          const { url, pid, title } = data[0];
+          const { url, pid, title } = res.data[0];
 
           reply(`[CQ:at,qq=${user_id}]\npid: ${pid}\ntitle: ${title}\n----------------\n图片下载中，请耐心等待喵`);
 

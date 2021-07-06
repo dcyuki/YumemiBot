@@ -187,8 +187,7 @@ async function show(data, bot) {
 }
 
 function listener(data) {
-  const { raw_message } = data;
-  const action = checkCommand('aircon', raw_message);
+  const action = checkCommand('aircon', data, this);
 
   action && eval(`${action}(data, this)`);
 }

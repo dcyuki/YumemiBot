@@ -14,9 +14,9 @@ function getBotDir(): Map<string, IBot> {
   const bot_bir: Map<string, IBot> = new Map();
 
   for (let file_name of readdirSync('./config/bots')) {
-    const bot_name: string = file_name.split('.')[0];
+    const bot_id: string = file_name.split('.')[0];
 
-    bot_bir.set(bot_name, getProfileSync(bot_name, './config/bots') as IBot);
+    bot_bir.set(bot_id, getProfileSync(bot_id, './config/bots') as IBot);
   }
 
   return bot_bir
@@ -30,7 +30,7 @@ function linkStart(): Map<number, Client> {
 
     bot.masters = masters;
     bots.set(uin, bot);
-    bot.logger.mark(`正在登录账号 ${key} (${uin})...`);
+    bot.logger.mark(`正在登录账号 ${key} ...`);
 
     bot.on("system.login.slider", function () {
       bot.logger.mark("取ticket教程：https://github.com/takayama-lily/oicq/wiki/01.滑动验证码和设备锁");

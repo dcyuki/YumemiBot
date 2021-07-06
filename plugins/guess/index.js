@@ -12,7 +12,7 @@ function avatar(data, bot) {
 
     if (nicknames.includes(data.raw_message)) {
       const { nickname, card } = data.sender;
-      data.reply(`[CQ:image,file=base64://${complete}]\n恭喜 ${card ? card : nickname} 猜对啦~\n关键字：${[...nicknames]}\n如有错误请联系 yuki 修改`);
+      data.reply(`[CQ:image,file=base64://${complete}]\n恭喜 ${card ? card : nickname} 猜对啦~\n\n关键字：${[...nicknames]}\n如有错误请联系 yuki 修改`);
       avatar_info.delete(group_id);
       // 清除 settimeout
       clearTimeout(timeout);
@@ -68,8 +68,7 @@ function avatar(data, bot) {
 }
 
 function listener(data) {
-  const { raw_message } = data;
-  const action = checkCommand('guess', raw_message);
+  const action = checkCommand('guess', data, this);
 
   action && eval(`${action}(data, this)`);
 }

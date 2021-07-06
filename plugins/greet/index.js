@@ -62,11 +62,11 @@ function decrease(data, bot) {
     ;
 }
 
-function title(data, bot) {
-  const { group_id, user_id } = data;
+// function title(data, bot) {
+//   const { group_id, user_id, reply } = data;
 
-  bot.sendGroupMsg(group_id, `[CQ:at,qq=${user_id}] 头衔已变更`);
-}
+//   reply(`[CQ:at,qq=${user_id}] 头衔已变更`);
+// }
 
 function listener(data) {
   const { sub_type } = data;
@@ -84,18 +84,19 @@ function listener(data) {
       decrease(data, this);
       break;
 
-    case 'title':
-      title(data, this);
-      break;
+    // oicq 移除了头衔变更事件
+    // case 'title':
+    //   title(data, this);
+    //   break;
   }
 }
 
 function activate(bot) {
-  bot.on("notice.group", listener);
+  bot.on('notice.group', listener);
 }
 
 function deactivate(bot) {
-  bot.off("notice.group", listener);
+  bot.off('notice.group', listener);
 }
 
 module.exports = {

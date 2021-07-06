@@ -2,8 +2,7 @@ const { checkCommand } = require('../../dist/util');
 const { start, move, rollback, surrender, over } = require('./gobang');
 
 function listener(data) {
-  const { raw_message } = data;
-  const action = checkCommand('chess', raw_message);
+  const action = checkCommand('chess', data, this);
 
   action && eval(`${action}(data)`);
 }

@@ -23,12 +23,17 @@ async function title(data, bot) {
 
   const title = raw_message.substr(4).trim();
 
-  bot.setGroupSpecialTitle(group_id, user_id, title);
+  bot.setGroupSpecialTitle(group_id, user_id, title)
+    .then(() => {
+      reply(`[CQ:at,qq=${user_id}] 头衔已变更`);
+    })
+    .catch(err => {
+      reply(err);
+    })
 }
 
 function listener(data) {
-  const { raw_message } = data;
-  const action = checkCommand('master', raw_message);
+  const action = checkCommand('master', data, this);
 
   action && eval(`${action}(data, this)`);
 }

@@ -47,8 +47,7 @@ function smallBlackRoom(data, bot) {
 }
 
 function listener(data) {
-  const { raw_message } = data;
-  const action = checkCommand('setu', raw_message);
+  const action = checkCommand('setu', data, this);
 
   action && eval(`${action}(data, this)`);
 }

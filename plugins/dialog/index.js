@@ -95,8 +95,7 @@ function help(data) {
 }
 
 function listener(data) {
-  const { raw_message } = data;
-  const action = checkCommand('dialog', raw_message);
+  const action = checkCommand('dialog', data, this);
 
   chat(data);
   repeat(data);

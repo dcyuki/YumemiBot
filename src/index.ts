@@ -74,10 +74,12 @@ async function bindMasterEvents(bot: Client) {
   process.title = 'yumemi';
 
   require('../services/web');
+  require('../services/bilibili');
 
   const bots = linkStart();
 
   bots.forEach((bot: Client) => {
+    bot.setMaxListeners(30);
     bot.on("system.online", () => {
       bindMasterEvents(bot);
     });

@@ -12,8 +12,8 @@ const bots = new Map();
 function getBotDir() {
     const bot_bir = new Map();
     for (let file_name of fs_1.readdirSync('./config/bots')) {
-        const bot_name = file_name.split('.')[0];
-        bot_bir.set(bot_name, util_1.getProfileSync(bot_name, './config/bots'));
+        const bot_id = file_name.split('.')[0];
+        bot_bir.set(bot_id, util_1.getProfileSync(bot_id, './config/bots'));
     }
     return bot_bir;
 }
@@ -24,7 +24,7 @@ function linkStart() {
         const bot = oicq_1.createClient(uin, config);
         bot.masters = masters;
         bots.set(uin, bot);
-        bot.logger.mark(`正在登录账号 ${key} (${uin})...`);
+        bot.logger.mark(`正在登录账号 ${key} ...`);
         bot.on("system.login.slider", function () {
             bot.logger.mark("取ticket教程：https://github.com/takayama-lily/oicq/wiki/01.滑动验证码和设备锁");
             process.stdout.write("ticket: ");

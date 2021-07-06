@@ -1,3 +1,10 @@
+battle:
+  version: none
+
+bilibili:
+  pcr_bl: true
+  pcr_jp: true
+
 buy:
   version: cn
 

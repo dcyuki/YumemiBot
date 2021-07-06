@@ -4,6 +4,7 @@ import { load, dump } from 'js-yaml';
 import { readFile, readFileSync, unlink, writeFile, promises, rmdir, accessSync } from 'fs';
 import { IGroups, Profile } from './types/yumemi';
 import { Client, GroupInfo, GroupMessageEventData } from 'oicq';
+import { getPlugins } from './plugin';
 
 
 /**
@@ -55,16 +56,23 @@ function getProfileSync(file_name: string, file_folder: string = './config'): Pr
   }
 }
 
-function checkCommand(plugin_name: string, msg: string): string {
-  let action = '';
+function checkCommand(plugin_name: string, data: GroupMessageEventData, bot: Client): string {
+  let action: string = '';
   const cmd = yumemi.cmd[plugin_name]
+  const { groups } = bot;
+  const { group_id } = data;
+
   for (const fnc in cmd) {
-    if (new RegExp(cmd[fnc]).test(msg)) {
+    if (new RegExp(cmd[fnc]).test(data.raw_message)) {
       action = fnc;
       break;
     }
   }
 
+  if (action && getPlugins().has(plugin_name) && /^(?!_).+/.test(plugin_name) && !groups[group_id].plugins.includes(plugin_name)) {
+    action = '';
+    data.reply(`${plugin_name} 服务未启用`);
+  }
   return action;
 }
 

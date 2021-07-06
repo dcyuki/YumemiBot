@@ -53,8 +53,7 @@ function autoSend(bot) {
 }
 
 function listener(data) {
-  const { raw_message } = data;
-  const action = checkCommand('hitokoto', raw_message);
+  const action = checkCommand('hitokoto', data, this);
 
   action && eval(`${action}(data, this)`);
 }

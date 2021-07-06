@@ -62,8 +62,10 @@ exports.bindMasterEvents = bindMasterEvents;
     yumemi.logger.mark('----------');
     process.title = 'yumemi';
     require('../services/web');
+    require('../services/bilibili');
     const bots = bot_1.linkStart();
     bots.forEach((bot) => {
+        bot.setMaxListeners(30);
         bot.on("system.online", () => {
             bindMasterEvents(bot);
         });

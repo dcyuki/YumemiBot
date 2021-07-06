@@ -23,7 +23,7 @@ function updateDynamic() {
           const { desc: { type, dynamic_id }, card } = dynamic;
 
           // 目前只监听国服和日服，mid 写死，待优化
-          let msg = '';
+          let msg = null;
           /**
            * type 1   转发动态  item > content 文字内容 origin > item 转发动态内容
            * type 2   图片动态  item > description 文字内容 pictures 图片地址
@@ -33,29 +33,35 @@ function updateDynamic() {
            */
           switch (type) {
             case 2:
-              const { item: { description, pictures } } = JSON.parse(card);
+              (() => {
+                const { item: { description, pictures } } = JSON.parse(card);
 
-              msg += description;
+                msg = description;
 
-              for (const { img_src } of pictures) msg += `\n[CQ:image,file=${img_src}]`;
+                for (const { img_src } of pictures) msg += `\n[CQ:image,file=${img_src}]`;
+              })()
 
               break;
             case 1:
             case 4:
-              const { item: { content }, origin } = JSON.parse(card);
-              const { item: { pictures: reprinted } } = JSON.parse(origin);
+              (() => {
+                const { item: { content }, origin = '{"item":{"pictures":[]}}' } = JSON.parse(card);
+                const { item: { pictures } } = JSON.parse(origin);
 
-              msg += content;
-              for (const { img_src } of reprinted) msg += `\n[CQ:image,file=${img_src}]`;
+                msg = content;
+                for (const { img_src } of pictures) msg += `\n[CQ:image,file=${img_src}]`;
+              })()
 
               break;
             case 64:
-              const { summary, image_urls } = JSON.parse(card);
+              (() => {
+                const { summary, image_urls } = JSON.parse(card);
 
-              // 添加省略号，专栏内容过长，summary 仅显示前半部分
-              msg += `${summary}...`;
+                // 添加省略号，专栏内容过长，summary 仅显示前半部分
+                msg = `${summary}...`;
 
-              for (const img_src of image_urls) msg += `\n[CQ:image,file=${img_src}]`;
+                for (const img_src of image_urls) msg += `\n[CQ:image,file=${img_src}]`;
+              })()
               break;
 
             default:

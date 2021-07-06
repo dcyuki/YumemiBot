@@ -80,8 +80,7 @@ ${data.ext_urls ? `地址：${data.ext_urls.join('\n')}` : `日文：${data.jp_n
 }
 
 function listener(data) {
-  const { raw_message } = data;
-  const action = checkCommand('saucenao', raw_message);
+  const action = checkCommand('saucenao', data, this);
 
   action && eval(`${action}(data, this)`);
 }
